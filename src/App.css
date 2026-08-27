@@ -409,6 +409,66 @@
   box-shadow: var(--shadow);
 }
 
+.aging-wip {
+  margin: 32px 0;
+}
+
+.aging-wip-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.aging-wip-list li {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.aging-wip-ticket {
+  display: grid;
+  grid-template-columns: 72px minmax(180px, 1fr) minmax(120px, 0.4fr) 90px;
+  gap: 14px;
+  align-items: center;
+}
+
+.aging-wip-ticket strong {
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.aging-wip-reference,
+.aging-wip-age {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.aging-wip-reference {
+  font-family: var(--mono);
+}
+
+.aging-wip-age {
+  text-align: right;
+}
+
+.aging-wip-track {
+  height: 7px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--code-bg);
+}
+
+.aging-wip-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
 .cycle-time-trend {
   margin: 32px 0;
 }
@@ -695,6 +755,19 @@ tbody tr:last-child td {
 
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .aging-wip-ticket {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .aging-wip-ticket > :nth-child(3) {
+    grid-column: 2;
+  }
+
+  .aging-wip-age {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 
   .ticket-summary {

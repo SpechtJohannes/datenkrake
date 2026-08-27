@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
+import { AgingWipOverview } from './AgingWipOverview'
 import { DashboardSettingsDialog } from './DashboardSettingsDialog'
 import { CycleTimeOverview } from './CycleTimeOverview'
 import { TicketOverview } from './TicketOverview'
@@ -143,6 +144,13 @@ export function Dashboard() {
       )}
       {visibility.wip && (
         <WipOverview
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+          referenceTime={state.referenceTime}
+        />
+      )}
+      {visibility.agingWip && (
+        <AgingWipOverview
           issues={state.issues}
           statusDefinitions={state.statusDefinitions}
           referenceTime={state.referenceTime}

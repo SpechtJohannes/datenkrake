@@ -82,6 +82,7 @@ describe('Dashboard visibility settings', () => {
     expect(
       screen.getByRole('heading', { name: 'Work in Progress' }),
     ).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Tickets' })).toBeVisible()
 
     await user.click(trigger)
@@ -120,6 +121,7 @@ describe('Dashboard visibility settings', () => {
         'Work in Progress',
         () => screen.queryByRole('heading', { name: 'Work in Progress' }),
       ],
+      ['Aging WIP', () => screen.queryByRole('heading', { name: 'Aging WIP' })],
       ['Tickets', () => screen.queryByRole('heading', { name: 'Tickets' })],
     ] as const
 
@@ -135,20 +137,23 @@ describe('Dashboard visibility settings', () => {
   it('stores independent changes and restores stored visibility on load', async () => {
     localStorage.setItem(
       DASHBOARD_VISIBILITY_STORAGE_KEY,
-      JSON.stringify({ ...createDefaultVisibility(), tickets: false }),
+      JSON.stringify({ ...createDefaultVisibility(), agingWip: false }),
     )
     const user = userEvent.setup()
     await renderDashboard()
 
     expect(
-      screen.queryByRole('heading', { name: 'Tickets' }),
+      screen.queryByRole('heading', { name: 'Aging WIP' }),
     ).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
-    await user.click(screen.getByRole('checkbox', { name: 'Throughput' }))
+    const agingWip = screen.getByRole('checkbox', { name: 'Aging WIP' })
+    expect(agingWip).not.toBeChecked()
+    await user.click(agingWip)
 
     expect(
       JSON.parse(localStorage.getItem(DASHBOARD_VISIBILITY_STORAGE_KEY) ?? ''),
-    ).toMatchObject({ tickets: false, throughput: false })
+    ).toMatchObject({ agingWip: true })
+    expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
     expect(
       screen.getByRole('heading', { name: 'Work in Progress' }),
     ).toBeVisible()
@@ -158,12 +163,12 @@ describe('Dashboard visibility settings', () => {
     const user = userEvent.setup()
     await renderDashboard()
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
-    await user.click(screen.getByRole('checkbox', { name: 'Tickets' }))
+    await user.click(screen.getByRole('checkbox', { name: 'Aging WIP' }))
     await user.click(
       screen.getByRole('button', { name: 'Standard wiederherstellen' }),
     )
 
-    expect(screen.getByRole('heading', { name: 'Tickets' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
     expect(
       JSON.parse(localStorage.getItem(DASHBOARD_VISIBILITY_STORAGE_KEY) ?? ''),
     ).toEqual(createDefaultVisibility())

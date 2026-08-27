@@ -88,7 +88,7 @@ describe('Dashboard', () => {
       screen.getByLabelText('Issues mit Journaleinträgen: 3'),
     ).toBeVisible()
 
-    const table = screen.getByRole('table')
+    const table = screen.getByRole('table', { name: 'Issue-Vorschau' })
     expect(within(table).getByText('Issue 101')).toBeVisible()
     expect(within(table).getByText('Issue 105')).toBeVisible()
     expect(within(table).queryByText('Issue 106')).not.toBeInTheDocument()

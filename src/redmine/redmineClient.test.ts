@@ -5,7 +5,7 @@ const issue = (id: number) => ({
   id,
   project: { id: 1, name: 'Project' },
   tracker: { id: 2, name: 'Story' },
-  status: { id: 3, name: 'Open' },
+  status: { id: 3, name: 'Open', is_closed: false },
   priority: { id: 4, name: 'Normal' },
   author: { id: 5, name: 'Ada' },
   subject: `Issue ${id}`,

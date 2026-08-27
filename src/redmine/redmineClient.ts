@@ -42,13 +42,21 @@ function isReference(value: unknown): boolean {
   )
 }
 
+function isStatus(value: unknown): boolean {
+  return (
+    isReference(value) &&
+    isRecord(value) &&
+    typeof value.is_closed === 'boolean'
+  )
+}
+
 function isIssue(value: unknown): value is RedmineApiIssue {
   return (
     isRecord(value) &&
     typeof value.id === 'number' &&
     isReference(value.project) &&
     isReference(value.tracker) &&
-    isReference(value.status) &&
+    isStatus(value.status) &&
     isReference(value.priority) &&
     isReference(value.author) &&
     typeof value.subject === 'string' &&

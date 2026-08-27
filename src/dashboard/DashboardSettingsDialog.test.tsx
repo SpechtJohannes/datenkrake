@@ -80,6 +80,9 @@ describe('Dashboard visibility settings', () => {
     ).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Throughput' })).toBeVisible()
     expect(
+      screen.getByRole('heading', { name: 'Throughput Verteilung' }),
+    ).toBeVisible()
+    expect(
       screen.getByRole('heading', { name: 'Work in Progress' }),
     ).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
@@ -126,6 +129,10 @@ describe('Dashboard visibility settings', () => {
         () => screen.queryByRole('heading', { name: 'Throughput' }),
       ],
       [
+        'Throughput Verteilung',
+        () => screen.queryByRole('heading', { name: 'Throughput Verteilung' }),
+      ],
+      [
         'Work in Progress',
         () => screen.queryByRole('heading', { name: 'Work in Progress' }),
       ],
@@ -161,7 +168,7 @@ describe('Dashboard visibility settings', () => {
       DASHBOARD_VISIBILITY_STORAGE_KEY,
       JSON.stringify({
         ...createDefaultVisibility(),
-        aggregatedStatusDwellTimes: false,
+        throughputDistribution: false,
       }),
     )
     const user = userEvent.setup()
@@ -169,22 +176,22 @@ describe('Dashboard visibility settings', () => {
 
     expect(
       screen.queryByRole('heading', {
-        name: 'Aggregierte Statusverweilzeiten',
+        name: 'Throughput Verteilung',
       }),
     ).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
-    const aggregatedDwellTimes = screen.getByRole('checkbox', {
-      name: 'Aggregierte Statusverweilzeiten',
+    const throughputDistribution = screen.getByRole('checkbox', {
+      name: 'Throughput Verteilung',
     })
-    expect(aggregatedDwellTimes).not.toBeChecked()
-    await user.click(aggregatedDwellTimes)
+    expect(throughputDistribution).not.toBeChecked()
+    await user.click(throughputDistribution)
 
     expect(
       JSON.parse(localStorage.getItem(DASHBOARD_VISIBILITY_STORAGE_KEY) ?? ''),
-    ).toMatchObject({ aggregatedStatusDwellTimes: true })
+    ).toMatchObject({ throughputDistribution: true })
     expect(
       screen.getByRole('heading', {
-        name: 'Aggregierte Statusverweilzeiten',
+        name: 'Throughput Verteilung',
       }),
     ).toBeVisible()
     expect(
@@ -198,7 +205,7 @@ describe('Dashboard visibility settings', () => {
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
     await user.click(
       screen.getByRole('checkbox', {
-        name: 'Aggregierte Statusverweilzeiten',
+        name: 'Throughput Verteilung',
       }),
     )
     await user.click(
@@ -207,7 +214,7 @@ describe('Dashboard visibility settings', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: 'Aggregierte Statusverweilzeiten',
+        name: 'Throughput Verteilung',
       }),
     ).toBeVisible()
     expect(

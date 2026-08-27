@@ -19,6 +19,11 @@ export const DASHBOARD_SECTIONS = [
     defaultVisible: true,
   },
   { id: 'throughput', label: 'Throughput', defaultVisible: true },
+  {
+    id: 'throughputDistribution',
+    label: 'Throughput Verteilung',
+    defaultVisible: true,
+  },
   { id: 'wip', label: 'Work in Progress', defaultVisible: true },
   { id: 'agingWip', label: 'Aging WIP', defaultVisible: true },
   {

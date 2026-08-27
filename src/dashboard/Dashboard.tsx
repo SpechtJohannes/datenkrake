@@ -9,6 +9,7 @@ import { CycleTimeOverview } from './CycleTimeOverview'
 import { CurrentWipByStatus } from './CurrentWipByStatus'
 import { TicketOverview } from './TicketOverview'
 import { ThroughputOverview } from './ThroughputOverview'
+import { ThroughputDistribution } from './ThroughputDistribution'
 import { WipOverview } from './WipOverview'
 import {
   createDefaultVisibility,
@@ -140,6 +141,12 @@ export function Dashboard() {
       />
       {visibility.throughput && (
         <ThroughputOverview
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+        />
+      )}
+      {visibility.throughputDistribution && (
+        <ThroughputDistribution
           issues={state.issues}
           statusDefinitions={state.statusDefinitions}
         />

@@ -419,14 +419,7 @@
   font-weight: 650;
 }
 
-.issue-preview {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-}
-
-.status-dwell-preview {
+.ticket-overview {
   margin-top: 40px;
 }
 
@@ -438,34 +431,89 @@
   margin-bottom: 6px;
 }
 
-.status-dwell-list {
+.ticket-list {
   display: grid;
-  gap: 20px;
+  gap: 8px;
 }
 
-.status-dwell-card {
+.ticket-card {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
 }
 
-.status-dwell-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 18px 20px;
-  border-bottom: 1px solid var(--border);
+.ticket-summary {
+  display: grid;
+  grid-template-columns:
+    72px minmax(180px, 1fr) repeat(3, minmax(130px, 0.6fr))
+    28px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.status-dwell-card-header h3 {
-  margin: 0;
+.ticket-summary:hover {
+  background: var(--code-bg);
+}
+
+.ticket-summary:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: -3px;
+}
+
+.ticket-reference {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-weight: 800;
+}
+
+.ticket-subject {
+  min-width: 0;
   color: var(--text-h);
-  font-size: 18px;
+  overflow-wrap: anywhere;
 }
 
-.status-dwell-card-header p {
-  flex-shrink: 0;
+.ticket-summary-value {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ticket-summary-value > span {
+  font-size: 12px;
+}
+
+.ticket-summary-value strong {
+  color: var(--text-h);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.ticket-toggle {
+  color: var(--accent);
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ticket-details {
+  border-top: 1px solid var(--accent-border);
+  background: var(--code-bg);
+}
+
+.ticket-details caption {
+  padding: 16px 20px 8px;
+  color: var(--text-h);
+  font-weight: 700;
+  text-align: left;
 }
 
 .cycle-time-details {
@@ -492,24 +540,6 @@
   color: var(--text-h);
   font-weight: 650;
   overflow-wrap: anywhere;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.issue-preview h2 {
-  padding: 20px;
-  margin: 0;
-  border-bottom: 1px solid var(--border);
 }
 
 .table-scroll {
@@ -548,12 +578,23 @@ tbody tr:last-child td {
     grid-template-columns: 1fr;
   }
 
-  .status-dwell-card-header {
-    flex-direction: column;
+  .ticket-summary {
+    grid-template-columns: auto 1fr auto;
+    gap: 10px 14px;
   }
 
-  .status-dwell-card-header p {
-    flex-shrink: 1;
+  .ticket-subject {
+    grid-column: 2;
+  }
+
+  .ticket-summary-value {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(120px, 0.45fr) 1fr;
+  }
+
+  .ticket-toggle {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 
   .cycle-time-details {

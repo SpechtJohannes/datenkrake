@@ -11,7 +11,7 @@ describe('dashboard visibility persistence', () => {
   it('uses the central all-visible defaults without stored data', () => {
     const visibility = loadDashboardVisibility({ getItem: () => null })
 
-    expect(DASHBOARD_SECTIONS).toHaveLength(8)
+    expect(DASHBOARD_SECTIONS).toHaveLength(9)
     expect(Object.values(visibility).every(Boolean)).toBe(true)
   })
 
@@ -46,6 +46,7 @@ describe('dashboard visibility persistence', () => {
     expect(visibility.cycleTimeSummary).toBe(true)
     expect(visibility.wip).toBe(true)
     expect(visibility.agingWip).toBe(true)
+    expect(visibility.currentWipByStatus).toBe(true)
     expect(visibility.tickets).toBe(true)
   })
 

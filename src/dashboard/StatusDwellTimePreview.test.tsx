@@ -13,6 +13,7 @@ const statusDefinitions: readonly StatusDefinition[] = [
   { id: 2, name: 'Refined', is_closed: false },
   { id: 3, name: 'In Progress', is_closed: false },
   { id: 4, name: 'Review', is_closed: false },
+  { id: 5, name: 'Done', is_closed: true },
 ]
 
 function statusChange(
@@ -129,6 +130,12 @@ describe('StatusDwellTimePreview', () => {
       '1',
       'Aktuell',
     ])
+    const cycleTimeDetails = screen.getByLabelText('Cycle Time für Issue #101')
+    expect(within(cycleTimeDetails).getByText('Läuft')).toBeVisible()
+    expect(within(cycleTimeDetails).getByText('2d')).toBeVisible()
+    expect(
+      within(cycleTimeDetails).getByText('02.01.2026, 00:00'),
+    ).toHaveAttribute('datetime', '2026-01-02T00:00:00Z')
   })
 
   it('limits the plausibility preview to the first ten issues', () => {
@@ -153,13 +160,20 @@ describe('StatusDwellTimePreview', () => {
     expect(screen.getAllByRole('article')).toHaveLength(10)
   })
 
-  it('uses one shared reference time for all open issue phases', () => {
-    const issues = [createIssue(1), createIssue(2)]
+  it('uses one shared reference time for all open issue phases and cycle times', () => {
+    const issues = [1, 2].map((id) =>
+      createIssue(id, {
+        status: { id: 2, name: 'Refined', is_closed: false },
+        journals: [
+          createJournal(id, '2026-01-02T00:00:00Z', statusChange(1, 2)),
+        ],
+      }),
+    )
 
     render(
       <StatusDwellTimePreview
         issues={issues}
-        referenceTime="2026-01-03T00:00:00Z"
+        referenceTime="2026-01-04T00:00:00Z"
         statusDefinitions={statusDefinitions}
       />,
     )
@@ -168,8 +182,10 @@ describe('StatusDwellTimePreview', () => {
       name: /Statusverweilzeiten für Issue/,
     })
     expect(dwellTimeTables).toHaveLength(2)
-    expect(within(dwellTimeTables[0]).getByText('2d')).toBeVisible()
-    expect(within(dwellTimeTables[1]).getByText('2d')).toBeVisible()
+    const firstCycleTime = screen.getByLabelText('Cycle Time für Issue #1')
+    const secondCycleTime = screen.getByLabelText('Cycle Time für Issue #2')
+    expect(within(firstCycleTime).getByText('2d')).toBeVisible()
+    expect(within(secondCycleTime).getByText('2d')).toBeVisible()
   })
 
   it('keeps a historical status without a catalog definition transparent', () => {

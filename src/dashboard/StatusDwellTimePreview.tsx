@@ -1,10 +1,12 @@
 import type { RedmineIssue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
+import { calculateCycleTime } from '../domain/cycleTime'
 import {
   calculateStatusDwellTimes,
   formatDurationMs,
   type ReferenceTime,
 } from '../domain/statusDwellTime'
+import { CycleTimeDetails } from './CycleTimeDetails'
 
 const PREVIEW_LIMIT = 10
 
@@ -38,6 +40,11 @@ export function StatusDwellTimePreview({
             referenceTime,
             statusDefinitions,
           )
+          const cycleTime = calculateCycleTime(
+            issue,
+            statusDefinitions,
+            referenceTime,
+          )
           const issueTitleId = `status-dwell-issue-${issue.id}`
 
           return (
@@ -54,6 +61,8 @@ export function StatusDwellTimePreview({
                   Aktueller Status: <strong>{issue.status.name}</strong>
                 </p>
               </header>
+
+              <CycleTimeDetails cycleTime={cycleTime} issueId={issue.id} />
 
               <div className="table-scroll">
                 <table>

@@ -110,6 +110,32 @@
   flex-shrink: 0;
 }
 
+.cycle-time-details {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--code-bg);
+}
+
+.cycle-time-details div {
+  min-width: 0;
+  padding: 14px 20px;
+}
+
+.cycle-time-details dt {
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.cycle-time-details dd {
+  margin: 0;
+  color: var(--text-h);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -170,5 +196,9 @@ tbody tr:last-child td {
 
   .status-dwell-card-header p {
     flex-shrink: 1;
+  }
+
+  .cycle-time-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

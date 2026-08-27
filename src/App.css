@@ -160,10 +160,14 @@
   background: var(--surface);
 }
 
+.trend-chart-canvas {
+  position: relative;
+  min-width: 720px;
+}
+
 .trend-chart {
   display: block;
   width: 100%;
-  min-width: 720px;
   color: var(--text);
 }
 
@@ -224,6 +228,53 @@
   fill: var(--accent);
   stroke: var(--accent-border);
   stroke-width: 4;
+}
+
+.trend-detail {
+  position: absolute;
+  z-index: 2;
+  width: min(240px, 42vw);
+  padding: 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transform: translate(14px, -50%);
+}
+
+.trend-detail-left {
+  transform: translate(calc(-100% - 14px), -50%);
+}
+
+.trend-ticket-reference {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.trend-detail strong {
+  display: block;
+  color: var(--text-h);
+}
+
+.trend-detail dl {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.trend-detail dt {
+  font-size: 12px;
+}
+
+.trend-detail dd {
+  margin: 0;
+  color: var(--text-h);
+  font-weight: 650;
 }
 
 .issue-preview {

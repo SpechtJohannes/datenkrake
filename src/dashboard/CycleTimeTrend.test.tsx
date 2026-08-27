@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { CycleTimeTrend } from './CycleTimeTrend'
 
@@ -83,5 +84,72 @@ describe('CycleTimeTrend', () => {
     expect(
       screen.queryByRole('img', { name: /Punktdiagramm/ }),
     ).not.toBeInTheDocument()
+  })
+
+  it('opens, switches, closes, and keyboard-controls point details', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <CycleTimeTrend
+        metrics={{
+          medianCompletedDurationMs: 2 * DAY_MS,
+          p85CompletedDurationMs: 3 * DAY_MS,
+          p95CompletedDurationMs: 4 * DAY_MS,
+          completedCount: 2,
+          runningCount: 0,
+        }}
+        points={[
+          {
+            issueId: 101,
+            subject: 'Erstes Ticket',
+            completedAt: '2026-01-02T00:00:00Z',
+            completedAtMs: Date.parse('2026-01-02T00:00:00Z'),
+            durationMs: 2 * DAY_MS,
+            durationDays: 2,
+          },
+          {
+            issueId: 102,
+            subject: 'Zweites Ticket',
+            completedAt: '2026-01-03T00:00:00Z',
+            completedAtMs: Date.parse('2026-01-03T00:00:00Z'),
+            durationMs: 4 * DAY_MS,
+            durationDays: 4,
+          },
+        ]}
+      />,
+    )
+
+    const firstPoint = screen.getByRole('button', { name: /Issue #101:/ })
+    const secondPoint = screen.getByRole('button', { name: /Issue #102:/ })
+    const chart = screen.getByRole('img', { name: /Punktdiagramm mit 2/ })
+
+    await user.click(firstPoint)
+
+    const firstDetails = screen.getByLabelText('Details zu Issue #101')
+    expect(firstDetails).toHaveAttribute('tabindex', '0')
+    expect(within(firstDetails).getByText('#101')).toBeVisible()
+    expect(within(firstDetails).getByText('Erstes Ticket')).toBeVisible()
+    expect(within(firstDetails).getByText('2d')).toBeVisible()
+    expect(within(firstDetails).getByText('02.01.2026, 00:00')).toHaveAttribute(
+      'datetime',
+      '2026-01-02T00:00:00Z',
+    )
+
+    await user.click(secondPoint)
+    expect(
+      screen.queryByLabelText('Details zu Issue #101'),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Details zu Issue #102')).toBeVisible()
+
+    await user.click(chart)
+    expect(screen.queryByLabelText(/Details zu Issue/)).not.toBeInTheDocument()
+
+    firstPoint.focus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByLabelText('Details zu Issue #101')).toBeVisible()
+
+    secondPoint.focus()
+    await user.keyboard(' ')
+    expect(screen.getByLabelText('Details zu Issue #102')).toBeVisible()
   })
 })

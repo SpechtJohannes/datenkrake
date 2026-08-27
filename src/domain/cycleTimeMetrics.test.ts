@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CycleTimeResult } from './cycleTime'
 import { calculateCycleTime } from './cycleTime'
-import { calculateCycleTimeMetrics } from './cycleTimeMetrics'
+import {
+  calculateCycleTimeMetrics,
+  calculatePercentile,
+} from './cycleTimeMetrics'
 import type { StatusHistoryIssue } from './statusHistory'
 
 vi.mock('./cycleTime', () => ({
@@ -52,6 +55,8 @@ describe('calculateCycleTimeMetrics', () => {
       calculateCycleTimeMetrics([], statusDefinitions, referenceTime),
     ).toEqual({
       medianCompletedDurationMs: null,
+      p85CompletedDurationMs: null,
+      p95CompletedDurationMs: null,
       completedCount: 0,
       runningCount: 0,
     })
@@ -68,6 +73,8 @@ describe('calculateCycleTimeMetrics', () => {
 
     expect(metrics).toEqual({
       medianCompletedDurationMs: null,
+      p85CompletedDurationMs: null,
+      p95CompletedDurationMs: null,
       completedCount: 0,
       runningCount: 0,
     })
@@ -86,6 +93,8 @@ describe('calculateCycleTimeMetrics', () => {
 
     expect(metrics).toEqual({
       medianCompletedDurationMs: null,
+      p85CompletedDurationMs: null,
+      p95CompletedDurationMs: null,
       completedCount: 0,
       runningCount: 2,
     })
@@ -107,6 +116,8 @@ describe('calculateCycleTimeMetrics', () => {
       ),
     ).toEqual({
       medianCompletedDurationMs: 300,
+      p85CompletedDurationMs: 300,
+      p95CompletedDurationMs: 300,
       completedCount: 1,
       runningCount: 0,
     })
@@ -124,6 +135,8 @@ describe('calculateCycleTimeMetrics', () => {
     )
 
     expect(metrics.medianCompletedDurationMs).toBe(200)
+    expect(metrics.p85CompletedDurationMs).toBe(270)
+    expect(metrics.p95CompletedDurationMs).toBe(290)
     expect(metrics.completedCount).toBe(3)
   })
 
@@ -140,6 +153,8 @@ describe('calculateCycleTimeMetrics', () => {
     )
 
     expect(metrics.medianCompletedDurationMs).toBe(250)
+    expect(metrics.p85CompletedDurationMs).toBe(355)
+    expect(metrics.p95CompletedDurationMs).toBe(385)
     expect(metrics.completedCount).toBe(4)
   })
 
@@ -163,8 +178,21 @@ describe('calculateCycleTimeMetrics', () => {
 
     expect(metrics).toEqual({
       medianCompletedDurationMs: 200,
+      p85CompletedDurationMs: 270,
+      p95CompletedDurationMs: 290,
       completedCount: 4,
       runningCount: 1,
     })
+  })
+})
+
+describe('calculatePercentile', () => {
+  it('is independent of input order', () => {
+    expect(calculatePercentile([400, 100, 300, 200], 0.85)).toBe(355)
+  })
+
+  it('keeps P50 identical to the conventional median', () => {
+    expect(calculatePercentile([300, 100, 200], 0.5)).toBe(200)
+    expect(calculatePercentile([400, 100, 300, 200], 0.5)).toBe(250)
   })
 })

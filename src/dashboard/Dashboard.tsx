@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
+import { CycleTimeSummary } from './CycleTimeSummary'
 import { IssuePreview } from './IssuePreview'
 import { StatusDwellTimePreview } from './StatusDwellTimePreview'
 
@@ -64,6 +65,11 @@ export function Dashboard() {
   return (
     <section aria-label="Dashboard-Übersicht">
       <DashboardSummary issues={state.issues} />
+      <CycleTimeSummary
+        issues={state.issues}
+        statusDefinitions={state.statusDefinitions}
+        referenceTime={state.referenceTime}
+      />
       <IssuePreview issues={state.issues} />
       <StatusDwellTimePreview
         issues={state.issues}

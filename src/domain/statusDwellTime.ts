@@ -15,6 +15,7 @@ export interface StatusDwellTime {
   totalDurationMs: number
   visitCount: number
   isCurrent: boolean
+  visitDurationsMs: number[]
 }
 
 export function calculateStatusDwellTimes(
@@ -36,6 +37,9 @@ export function calculateStatusDwellTimes(
 
     if (phase.endedAt !== null) {
       dwellTime.completedDurationMs += getNonNegativeDuration(phase.durationMs)
+      if (isValidDuration(phase.durationMs)) {
+        dwellTime.visitDurationsMs.push(phase.durationMs)
+      }
     }
   }
 
@@ -50,6 +54,11 @@ export function calculateStatusDwellTimes(
           currentPhase.startedAt,
           referenceTime,
         )
+        if (isValidDuration(currentDwellTime.ongoingDurationMs)) {
+          currentDwellTime.visitDurationsMs.push(
+            currentDwellTime.ongoingDurationMs,
+          )
+        }
       }
     }
   }
@@ -79,6 +88,7 @@ function getOrCreateDwellTime(
     totalDurationMs: 0,
     visitCount: 0,
     isCurrent: false,
+    visitDurationsMs: [],
   }
   dwellTimes.set(phase.statusId, dwellTime)
   return dwellTime
@@ -88,6 +98,10 @@ function getNonNegativeDuration(durationMs: number | null): number {
   return durationMs !== null && Number.isFinite(durationMs) && durationMs >= 0
     ? durationMs
     : 0
+}
+
+function isValidDuration(durationMs: number | null): durationMs is number {
+  return durationMs !== null && Number.isFinite(durationMs) && durationMs >= 0
 }
 
 function calculateOngoingDuration(

@@ -50,6 +50,7 @@ describe('calculateStatusDwellTimes', () => {
         totalDurationMs: 2 * DAY_MS,
         visitCount: 1,
         isCurrent: true,
+        visitDurationsMs: [2 * DAY_MS],
       },
     ])
   })
@@ -76,6 +77,7 @@ describe('calculateStatusDwellTimes', () => {
       totalDurationMs: 2 * DAY_MS,
       visitCount: 2,
       isCurrent: false,
+      visitDurationsMs: [DAY_MS, DAY_MS],
     })
     expect(dwellTimes[1]).toMatchObject({
       completedDurationMs: DAY_MS,
@@ -89,6 +91,7 @@ describe('calculateStatusDwellTimes', () => {
       totalDurationMs: DAY_MS,
       visitCount: 1,
       isCurrent: true,
+      visitDurationsMs: [DAY_MS],
     })
   })
 
@@ -119,6 +122,7 @@ describe('calculateStatusDwellTimes', () => {
       totalDurationMs: DAY_MS,
       visitCount: 1,
       isCurrent: true,
+      visitDurationsMs: [DAY_MS],
     })
   })
 

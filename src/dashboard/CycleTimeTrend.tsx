@@ -230,12 +230,10 @@ export function CycleTimeTrend({ metrics, points }: CycleTimeTrendProps) {
             <aside
               className={`trend-detail ${selectedPosition.x > WIDTH * 0.65 ? 'trend-detail-left' : ''}`}
               aria-label={`Details zu Issue #${selectedPoint.issueId}`}
-              onClick={(event) => event.stopPropagation()}
               style={{
                 left: `${(selectedPosition.x / WIDTH) * 100}%`,
                 top: `${(selectedPosition.y / HEIGHT) * 100}%`,
               }}
-              tabIndex={0}
             >
               <span className="trend-ticket-reference">
                 #{selectedPoint.issueId}

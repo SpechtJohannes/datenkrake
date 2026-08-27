@@ -68,6 +68,7 @@ const issues = [
 
 describe('Dashboard', () => {
   beforeEach(() => {
+    localStorage.clear()
     mockedGetIssues.mockReset()
     mockedGetStatuses.mockReset()
     mockedGetStatuses.mockResolvedValue([

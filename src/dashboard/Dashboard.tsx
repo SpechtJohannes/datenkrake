@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
+import { DashboardSettingsDialog } from './DashboardSettingsDialog'
 import { CycleTimeOverview } from './CycleTimeOverview'
 import { TicketOverview } from './TicketOverview'
 import { ThroughputOverview } from './ThroughputOverview'
 import { WipOverview } from './WipOverview'
+import {
+  createDefaultVisibility,
+  DASHBOARD_SECTIONS,
+  loadDashboardVisibility,
+  saveDashboardVisibility,
+  type DashboardSectionId,
+} from './dashboardVisibility'
 
 type DashboardState =
   | { status: 'loading' }
@@ -19,6 +27,9 @@ type DashboardState =
 
 export function Dashboard() {
   const [state, setState] = useState<DashboardState>({ status: 'loading' })
+  const [visibility, setVisibility] = useState(loadDashboardVisibility)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const settingsButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     let isActive = true
@@ -63,28 +74,87 @@ export function Dashboard() {
     )
   }
 
+  function updateVisibility(sectionId: DashboardSectionId, visible: boolean) {
+    setVisibility((current) => {
+      const next = { ...current, [sectionId]: visible }
+      saveDashboardVisibility(next)
+      return next
+    })
+  }
+
+  function resetVisibility() {
+    const next = createDefaultVisibility()
+    saveDashboardVisibility(next)
+    setVisibility(next)
+  }
+
+  function closeSettings() {
+    setIsSettingsOpen(false)
+    settingsButtonRef.current?.focus()
+  }
+
+  const hasVisibleSection = DASHBOARD_SECTIONS.some(
+    (section) => visibility[section.id],
+  )
+
   return (
     <section aria-label="Dashboard-Übersicht">
-      <DashboardSummary issues={state.issues} />
+      <div className="dashboard-toolbar">
+        <button
+          className="secondary-button"
+          onClick={() => setIsSettingsOpen(true)}
+          ref={settingsButtonRef}
+          type="button"
+        >
+          Dashboard anpassen
+        </button>
+      </div>
+
+      {isSettingsOpen && (
+        <DashboardSettingsDialog
+          onChange={updateVisibility}
+          onClose={closeSettings}
+          onReset={resetVisibility}
+          visibility={visibility}
+        />
+      )}
+
+      {!hasVisibleSection && (
+        <p className="dashboard-status" role="status">
+          Aktuell sind keine Dashboard-Bereiche ausgewählt. Über „Dashboard
+          anpassen“ können Bereiche wieder eingeblendet werden.
+        </p>
+      )}
+
+      {visibility.summary && <DashboardSummary issues={state.issues} />}
       <CycleTimeOverview
         issues={state.issues}
         statusDefinitions={state.statusDefinitions}
         referenceTime={state.referenceTime}
+        showDistribution={visibility.cycleTimeDistribution}
+        showSummary={visibility.cycleTimeSummary}
+        showTrend={visibility.cycleTimeTrend}
       />
-      <ThroughputOverview
-        issues={state.issues}
-        statusDefinitions={state.statusDefinitions}
-      />
-      <WipOverview
-        issues={state.issues}
-        statusDefinitions={state.statusDefinitions}
-        referenceTime={state.referenceTime}
-      />
-      <TicketOverview
-        issues={state.issues}
-        referenceTime={state.referenceTime}
-        statusDefinitions={state.statusDefinitions}
-      />
+      {visibility.throughput && (
+        <ThroughputOverview
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+        />
+      )}
+      {visibility.wip && (
+        <WipOverview
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+          referenceTime={state.referenceTime}
+        />
+      )}
+      {visibility.tickets && (
+        <TicketOverview
+          issues={state.issues}
+          referenceTime={state.referenceTime}
+          statusDefinitions={state.statusDefinitions}
+        />
+      )}
     </section>
   )
 }

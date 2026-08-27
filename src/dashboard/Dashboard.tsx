@@ -5,6 +5,7 @@ import { DashboardSummary } from './DashboardSummary'
 import { AgingWipOverview } from './AgingWipOverview'
 import { DashboardSettingsDialog } from './DashboardSettingsDialog'
 import { CycleTimeOverview } from './CycleTimeOverview'
+import { CurrentWipByStatus } from './CurrentWipByStatus'
 import { TicketOverview } from './TicketOverview'
 import { ThroughputOverview } from './ThroughputOverview'
 import { WipOverview } from './WipOverview'
@@ -151,6 +152,13 @@ export function Dashboard() {
       )}
       {visibility.agingWip && (
         <AgingWipOverview
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+          referenceTime={state.referenceTime}
+        />
+      )}
+      {visibility.currentWipByStatus && (
+        <CurrentWipByStatus
           issues={state.issues}
           statusDefinitions={state.statusDefinitions}
           referenceTime={state.referenceTime}

@@ -469,6 +469,54 @@
   background: var(--accent);
 }
 
+.current-wip-status {
+  margin: 32px 0;
+}
+
+.current-wip-status-list {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  list-style: none;
+}
+
+.current-wip-status-list li {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) minmax(160px, 1fr) 42px;
+  gap: 14px;
+  align-items: center;
+}
+
+.current-wip-status-name {
+  color: var(--text-h);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.current-wip-status-track {
+  height: 18px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--code-bg);
+}
+
+.current-wip-status-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.current-wip-status-list strong {
+  color: var(--text-h);
+  font-size: 18px;
+  text-align: right;
+}
+
 .cycle-time-trend {
   margin: 32px 0;
 }
@@ -768,6 +816,15 @@ tbody tr:last-child td {
   .aging-wip-age {
     grid-column: 3;
     grid-row: 1 / span 2;
+  }
+
+  .current-wip-status-list li {
+    grid-template-columns: minmax(100px, 0.6fr) 42px;
+  }
+
+  .current-wip-status-track {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .ticket-summary {

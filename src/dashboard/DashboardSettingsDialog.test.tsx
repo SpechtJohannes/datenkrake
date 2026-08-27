@@ -83,6 +83,9 @@ describe('Dashboard visibility settings', () => {
       screen.getByRole('heading', { name: 'Work in Progress' }),
     ).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
+    expect(
+      screen.getByRole('heading', { name: 'Aktueller WIP nach Status' }),
+    ).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Tickets' })).toBeVisible()
 
     await user.click(trigger)
@@ -122,6 +125,13 @@ describe('Dashboard visibility settings', () => {
         () => screen.queryByRole('heading', { name: 'Work in Progress' }),
       ],
       ['Aging WIP', () => screen.queryByRole('heading', { name: 'Aging WIP' })],
+      [
+        'Aktueller WIP nach Status',
+        () =>
+          screen.queryByRole('heading', {
+            name: 'Aktueller WIP nach Status',
+          }),
+      ],
       ['Tickets', () => screen.queryByRole('heading', { name: 'Tickets' })],
     ] as const
 
@@ -137,23 +147,30 @@ describe('Dashboard visibility settings', () => {
   it('stores independent changes and restores stored visibility on load', async () => {
     localStorage.setItem(
       DASHBOARD_VISIBILITY_STORAGE_KEY,
-      JSON.stringify({ ...createDefaultVisibility(), agingWip: false }),
+      JSON.stringify({
+        ...createDefaultVisibility(),
+        currentWipByStatus: false,
+      }),
     )
     const user = userEvent.setup()
     await renderDashboard()
 
     expect(
-      screen.queryByRole('heading', { name: 'Aging WIP' }),
+      screen.queryByRole('heading', { name: 'Aktueller WIP nach Status' }),
     ).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
-    const agingWip = screen.getByRole('checkbox', { name: 'Aging WIP' })
-    expect(agingWip).not.toBeChecked()
-    await user.click(agingWip)
+    const currentWip = screen.getByRole('checkbox', {
+      name: 'Aktueller WIP nach Status',
+    })
+    expect(currentWip).not.toBeChecked()
+    await user.click(currentWip)
 
     expect(
       JSON.parse(localStorage.getItem(DASHBOARD_VISIBILITY_STORAGE_KEY) ?? ''),
-    ).toMatchObject({ agingWip: true })
-    expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
+    ).toMatchObject({ currentWipByStatus: true })
+    expect(
+      screen.getByRole('heading', { name: 'Aktueller WIP nach Status' }),
+    ).toBeVisible()
     expect(
       screen.getByRole('heading', { name: 'Work in Progress' }),
     ).toBeVisible()
@@ -163,12 +180,16 @@ describe('Dashboard visibility settings', () => {
     const user = userEvent.setup()
     await renderDashboard()
     await user.click(screen.getByRole('button', { name: 'Dashboard anpassen' }))
-    await user.click(screen.getByRole('checkbox', { name: 'Aging WIP' }))
+    await user.click(
+      screen.getByRole('checkbox', { name: 'Aktueller WIP nach Status' }),
+    )
     await user.click(
       screen.getByRole('button', { name: 'Standard wiederherstellen' }),
     )
 
-    expect(screen.getByRole('heading', { name: 'Aging WIP' })).toBeVisible()
+    expect(
+      screen.getByRole('heading', { name: 'Aktueller WIP nach Status' }),
+    ).toBeVisible()
     expect(
       JSON.parse(localStorage.getItem(DASHBOARD_VISIBILITY_STORAGE_KEY) ?? ''),
     ).toEqual(createDefaultVisibility())

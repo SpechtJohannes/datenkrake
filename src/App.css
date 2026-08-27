@@ -212,6 +212,84 @@
   font-size: 13px;
 }
 
+.wip-trend {
+  margin: 32px 0;
+}
+
+.wip-scroll {
+  overflow-x: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.wip-chart-canvas {
+  position: relative;
+  min-width: 720px;
+}
+
+.wip-chart {
+  display: block;
+  width: 100%;
+  color: var(--text);
+}
+
+.wip-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.wip-axis-label,
+.wip-axis-title {
+  fill: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+}
+
+.wip-axis-label {
+  text-anchor: end;
+}
+
+.wip-date-label,
+.wip-axis-title {
+  text-anchor: middle;
+}
+
+.wip-line {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.wip-point {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.wip-point:focus {
+  outline: none;
+  fill: var(--accent-bg);
+  stroke: var(--text-h);
+  stroke-width: 4;
+}
+
+.wip-detail {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  color: var(--text-h);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
 .cycle-time-trend {
   margin: 32px 0;
 }

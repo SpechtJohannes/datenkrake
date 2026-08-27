@@ -18,8 +18,8 @@ export interface RedmineCustomField {
 export interface RedmineJournalDetail {
   property: string
   name: string
-  old_value: string
-  new_value: string
+  old_value?: string | null
+  new_value?: string | null
 }
 
 export interface RedmineJournal {
@@ -38,20 +38,20 @@ export interface RedmineIssue {
   status: RedmineStatus
   priority: RedmineReference
   author: RedmineReference
-  assigned_to: RedmineReference
-  category: RedmineReference
-  fixed_version: RedmineReference
+  assigned_to?: RedmineReference
+  category?: RedmineReference
+  fixed_version?: RedmineReference
   subject: string
   description: string
-  start_date: string
-  due_date: string
-  done_ratio: number
-  is_private: boolean
-  estimated_hours: number
-  total_estimated_hours: null
-  spent_hours: number
-  total_spent_hours: null
-  custom_fields: RedmineCustomField[]
+  start_date?: string | null
+  due_date?: string | null
+  done_ratio?: number
+  is_private?: boolean
+  estimated_hours?: number
+  total_estimated_hours?: number | null
+  spent_hours?: number
+  total_spent_hours?: number | null
+  custom_fields?: RedmineCustomField[]
   created_on: string
   updated_on: string
   closed_on: string | null

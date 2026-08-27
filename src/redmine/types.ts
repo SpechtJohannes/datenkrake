@@ -3,17 +3,40 @@ export interface RedmineApiReference {
   name: string
 }
 
+export interface RedmineApiStatus extends RedmineApiReference {
+  is_closed: boolean
+}
+
+export interface RedmineApiCustomField {
+  id: number
+  name: string
+  value: string
+}
+
 export interface RedmineApiIssue {
   id: number
   project: RedmineApiReference
   tracker: RedmineApiReference
-  status: RedmineApiReference
+  status: RedmineApiStatus
   priority: RedmineApiReference
   author: RedmineApiReference
   subject: string
   description: string
+  assigned_to?: RedmineApiReference
+  category?: RedmineApiReference
+  fixed_version?: RedmineApiReference
+  start_date?: string | null
+  due_date?: string | null
+  done_ratio?: number
+  is_private?: boolean
+  estimated_hours?: number
+  total_estimated_hours?: number | null
+  spent_hours?: number
+  total_spent_hours?: number | null
+  custom_fields?: RedmineApiCustomField[]
   created_on: string
   updated_on: string
+  closed_on?: string | null
 }
 
 export interface RedmineApiJournalDetail {

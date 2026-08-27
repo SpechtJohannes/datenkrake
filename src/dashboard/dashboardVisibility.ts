@@ -20,6 +20,7 @@ export const DASHBOARD_SECTIONS = [
   },
   { id: 'throughput', label: 'Throughput', defaultVisible: true },
   { id: 'wip', label: 'Work in Progress', defaultVisible: true },
+  { id: 'agingWip', label: 'Aging WIP', defaultVisible: true },
   { id: 'tickets', label: 'Tickets', defaultVisible: true },
 ] as const
 

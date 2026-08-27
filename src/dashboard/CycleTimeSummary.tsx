@@ -1,24 +1,11 @@
-import type { RedmineIssue } from '../data/issues'
-import type { StatusDefinition } from '../data/statusDefinitions'
-import { calculateCycleTimeMetrics } from '../domain/cycleTimeMetrics'
-import { formatDurationMs, type ReferenceTime } from '../domain/statusDwellTime'
+import type { CycleTimeMetrics } from '../domain/cycleTimeMetrics'
+import { formatDurationMs } from '../domain/statusDwellTime'
 
 interface CycleTimeSummaryProps {
-  issues: readonly RedmineIssue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
+  metrics: CycleTimeMetrics
 }
 
-export function CycleTimeSummary({
-  issues,
-  statusDefinitions,
-  referenceTime,
-}: CycleTimeSummaryProps) {
-  const metrics = calculateCycleTimeMetrics(
-    issues,
-    statusDefinitions,
-    referenceTime,
-  )
+export function CycleTimeSummary({ metrics }: CycleTimeSummaryProps) {
   const medianLabel =
     metrics.medianCompletedDurationMs === null
       ? 'Nicht verfügbar'

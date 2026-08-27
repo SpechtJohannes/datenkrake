@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
+import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
 import { IssuePreview } from './IssuePreview'
 import { StatusDwellTimePreview } from './StatusDwellTimePreview'
@@ -9,6 +10,7 @@ type DashboardState =
   | {
       status: 'success'
       issues: readonly RedmineIssue[]
+      statusDefinitions: readonly StatusDefinition[]
       referenceTime: number
     }
   | { status: 'error' }
@@ -19,10 +21,15 @@ export function Dashboard() {
   useEffect(() => {
     let isActive = true
 
-    getIssues().then(
-      (issues) => {
+    Promise.all([getIssues(), getStatuses()]).then(
+      ([issues, statusDefinitions]) => {
         if (isActive) {
-          setState({ status: 'success', issues, referenceTime: Date.now() })
+          setState({
+            status: 'success',
+            issues,
+            statusDefinitions,
+            referenceTime: Date.now(),
+          })
         }
       },
       () => {
@@ -61,6 +68,7 @@ export function Dashboard() {
       <StatusDwellTimePreview
         issues={state.issues}
         referenceTime={state.referenceTime}
+        statusDefinitions={state.statusDefinitions}
       />
     </section>
   )

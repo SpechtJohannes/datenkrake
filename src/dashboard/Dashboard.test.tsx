@@ -1,13 +1,18 @@
 import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getIssues, type RedmineIssue } from '../data/issues'
+import { getStatuses } from '../data/statusDefinitions'
 import { Dashboard } from './Dashboard'
 
 vi.mock('../data/issues', () => ({
   getIssues: vi.fn(),
 }))
+vi.mock('../data/statusDefinitions', () => ({
+  getStatuses: vi.fn(),
+}))
 
 const mockedGetIssues = vi.mocked(getIssues)
+const mockedGetStatuses = vi.mocked(getStatuses)
 
 function createIssue(
   id: number,
@@ -63,6 +68,11 @@ const issues = [
 describe('Dashboard', () => {
   beforeEach(() => {
     mockedGetIssues.mockReset()
+    mockedGetStatuses.mockReset()
+    mockedGetStatuses.mockResolvedValue([
+      { id: 1, name: 'Neu', is_closed: false },
+      { id: 2, name: 'Erledigt', is_closed: true },
+    ])
   })
 
   it('shows a loading state while issues are being loaded', () => {
@@ -100,6 +110,7 @@ describe('Dashboard', () => {
     expect(within(previewRow!).getByText('Erledigt')).toBeVisible()
     expect(within(previewRow!).getByText('2')).toBeVisible()
     expect(mockedGetIssues).toHaveBeenCalledOnce()
+    expect(mockedGetStatuses).toHaveBeenCalledOnce()
   })
 
   it('shows an understandable error when loading fails', async () => {

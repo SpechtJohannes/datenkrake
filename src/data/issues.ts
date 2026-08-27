@@ -15,4 +15,5 @@ export type {
   RedmineJournalDetail,
   RedmineReference,
   RedmineStatus,
+  StatusDefinition,
 } from './types'

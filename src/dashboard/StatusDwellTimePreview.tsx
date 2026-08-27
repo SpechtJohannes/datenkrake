@@ -1,4 +1,5 @@
 import type { RedmineIssue } from '../data/issues'
+import type { StatusDefinition } from '../data/statusDefinitions'
 import {
   calculateStatusDwellTimes,
   formatDurationMs,
@@ -10,11 +11,13 @@ const PREVIEW_LIMIT = 10
 interface StatusDwellTimePreviewProps {
   issues: readonly RedmineIssue[]
   referenceTime: ReferenceTime
+  statusDefinitions: readonly StatusDefinition[]
 }
 
 export function StatusDwellTimePreview({
   issues,
   referenceTime,
+  statusDefinitions,
 }: StatusDwellTimePreviewProps) {
   return (
     <section
@@ -30,7 +33,11 @@ export function StatusDwellTimePreview({
 
       <div className="status-dwell-list">
         {issues.slice(0, PREVIEW_LIMIT).map((issue) => {
-          const dwellTimes = calculateStatusDwellTimes(issue, referenceTime)
+          const dwellTimes = calculateStatusDwellTimes(
+            issue,
+            referenceTime,
+            statusDefinitions,
+          )
           const issueTitleId = `status-dwell-issue-${issue.id}`
 
           return (

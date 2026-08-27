@@ -2,6 +2,7 @@ import type {
   RedmineIssue,
   RedmineJournal,
   RedmineJournalDetail,
+  StatusDefinition,
 } from '../data/issues'
 
 type StatusHistoryJournal = Pick<RedmineJournal, 'id' | 'created_on'> & {
@@ -97,8 +98,12 @@ function getStatusChanges(issue: StatusHistoryIssue): StatusChange[] {
 function getStatusName(
   statusId: number,
   issue: StatusHistoryIssue,
+  statusDefinitions: readonly StatusDefinition[],
 ): string | null {
-  return statusId === issue.status.id ? issue.status.name : null
+  return (
+    statusDefinitions.find((definition) => definition.id === statusId)?.name ??
+    (statusId === issue.status.id ? issue.status.name : null)
+  )
 }
 
 function getDurationMs(startedAt: string, endedAt: string): number | null {
@@ -118,10 +123,11 @@ function createCompletedPhase(
   startedAt: string,
   endedAt: string,
   issue: StatusHistoryIssue,
+  statusDefinitions: readonly StatusDefinition[],
 ): StatusPhase {
   return {
     statusId,
-    statusName: getStatusName(statusId, issue),
+    statusName: getStatusName(statusId, issue, statusDefinitions),
     startedAt,
     endedAt,
     durationMs: getDurationMs(startedAt, endedAt),
@@ -130,6 +136,7 @@ function createCompletedPhase(
 
 export function reconstructStatusHistory(
   issue: StatusHistoryIssue,
+  statusDefinitions: readonly StatusDefinition[] = [],
 ): StatusPhase[] {
   const statusChanges = getConsistentStatusChanges(
     issue,
@@ -137,7 +144,14 @@ export function reconstructStatusHistory(
   )
 
   if (statusChanges.length === 0) {
-    return [createCurrentPhase(issue.status.id, issue.created_on, issue)]
+    return [
+      createCurrentPhase(
+        issue.status.id,
+        issue.created_on,
+        issue,
+        statusDefinitions,
+      ),
+    ]
   }
 
   const phases: StatusPhase[] = []
@@ -155,13 +169,21 @@ export function reconstructStatusHistory(
         phaseStartedAt,
         change.changedAt,
         issue,
+        statusDefinitions,
       ),
     )
     currentStatusId = change.newStatusId
     phaseStartedAt = change.changedAt
   }
 
-  phases.push(createCurrentPhase(currentStatusId, phaseStartedAt, issue))
+  phases.push(
+    createCurrentPhase(
+      currentStatusId,
+      phaseStartedAt,
+      issue,
+      statusDefinitions,
+    ),
+  )
   return phases
 }
 
@@ -190,12 +212,13 @@ function createCurrentPhase(
   statusId: number,
   startedAt: string,
   issue: StatusHistoryIssue,
+  statusDefinitions: readonly StatusDefinition[],
 ): StatusPhase {
   const closedAt = getReliableClosedAt(startedAt, issue)
 
   return {
     statusId,
-    statusName: getStatusName(statusId, issue),
+    statusName: getStatusName(statusId, issue, statusDefinitions),
     startedAt,
     endedAt: closedAt,
     durationMs: closedAt === null ? null : getDurationMs(startedAt, closedAt),

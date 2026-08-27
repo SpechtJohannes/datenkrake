@@ -3,6 +3,7 @@ import {
   type StatusHistoryIssue,
   type StatusPhase,
 } from './statusHistory'
+import type { StatusDefinition } from '../data/issues'
 
 export type ReferenceTime = string | number | Date
 
@@ -19,8 +20,9 @@ export interface StatusDwellTime {
 export function calculateStatusDwellTimes(
   issue: StatusHistoryIssue,
   referenceTime?: ReferenceTime,
+  statusDefinitions: readonly StatusDefinition[] = [],
 ): StatusDwellTime[] {
-  const phases = reconstructStatusHistory(issue)
+  const phases = reconstructStatusHistory(issue, statusDefinitions)
   const currentPhase = phases.at(-1)
   const dwellTimes = new Map<number, StatusDwellTime>()
 

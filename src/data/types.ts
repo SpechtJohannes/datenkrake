@@ -7,6 +7,8 @@ export interface RedmineStatus extends RedmineReference {
   is_closed: boolean
 }
 
+export type StatusDefinition = RedmineStatus
+
 export interface RedmineCustomField {
   id: number
   name: string

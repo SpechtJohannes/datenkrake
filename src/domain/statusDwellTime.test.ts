@@ -170,4 +170,25 @@ describe('calculateStatusDwellTimes', () => {
     expect(formatDurationMs(2 * DAY_MS + 4 * 60 * 60 * 1000)).toBe('2d 4h')
     expect(formatDurationMs(-1)).toBe('0m')
   })
+
+  it('carries catalog names into historical status dwell times', () => {
+    const dwellTimes = calculateStatusDwellTimes(
+      createIssue({
+        status: { id: 2, name: 'Refined', is_closed: false },
+        journals: [
+          createJournal(1, '2026-01-02T00:00:00Z', [statusChange(1, 2)]),
+        ],
+      }),
+      '2026-01-03T00:00:00Z',
+      [
+        { id: 1, name: 'New', is_closed: false },
+        { id: 2, name: 'Refined', is_closed: false },
+      ],
+    )
+
+    expect(dwellTimes.map((dwellTime) => dwellTime.statusName)).toEqual([
+      'New',
+      'Refined',
+    ])
+  })
 })

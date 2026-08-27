@@ -5,7 +5,15 @@ import type {
   RedmineJournal,
   RedmineJournalDetail,
 } from '../data/issues'
+import type { StatusDefinition } from '../data/statusDefinitions'
 import { StatusDwellTimePreview } from './StatusDwellTimePreview'
+
+const statusDefinitions: readonly StatusDefinition[] = [
+  { id: 1, name: 'New', is_closed: false },
+  { id: 2, name: 'Refined', is_closed: false },
+  { id: 3, name: 'In Progress', is_closed: false },
+  { id: 4, name: 'Review', is_closed: false },
+]
 
 function statusChange(
   oldStatusId: number,
@@ -73,10 +81,10 @@ describe('StatusDwellTimePreview', () => {
   it('shows issue details and multiple formatted status dwell times', () => {
     const issue = createIssue(101, {
       subject: 'Mehrere Statusphasen',
-      status: { id: 3, name: 'Review', is_closed: false },
+      status: { id: 4, name: 'Review', is_closed: false },
       journals: [
         createJournal(1, '2026-01-02T00:00:00Z', statusChange(1, 2)),
-        createJournal(2, '2026-01-03T00:00:00Z', statusChange(2, 3)),
+        createJournal(2, '2026-01-03T00:00:00Z', statusChange(2, 4)),
       ],
     })
 
@@ -84,6 +92,7 @@ describe('StatusDwellTimePreview', () => {
       <StatusDwellTimePreview
         issues={[issue]}
         referenceTime="2026-01-04T00:00:00Z"
+        statusDefinitions={statusDefinitions}
       />,
     )
 
@@ -108,13 +117,13 @@ describe('StatusDwellTimePreview', () => {
     expect(rows).toHaveLength(4)
     expect(historicalCells.map((cell) => cell.textContent)).toEqual([
       '1',
-      'Nicht bekannt',
+      'New',
       '1d',
       '1',
       '–',
     ])
     expect(currentCells.map((cell) => cell.textContent)).toEqual([
-      '3',
+      '4',
       'Review',
       '1d',
       '1',
@@ -131,6 +140,7 @@ describe('StatusDwellTimePreview', () => {
       <StatusDwellTimePreview
         issues={issues}
         referenceTime="2026-01-02T00:00:00Z"
+        statusDefinitions={statusDefinitions}
       />,
     )
 
@@ -150,6 +160,7 @@ describe('StatusDwellTimePreview', () => {
       <StatusDwellTimePreview
         issues={issues}
         referenceTime="2026-01-03T00:00:00Z"
+        statusDefinitions={statusDefinitions}
       />,
     )
 
@@ -159,5 +170,30 @@ describe('StatusDwellTimePreview', () => {
     expect(dwellTimeTables).toHaveLength(2)
     expect(within(dwellTimeTables[0]).getByText('2d')).toBeVisible()
     expect(within(dwellTimeTables[1]).getByText('2d')).toBeVisible()
+  })
+
+  it('keeps a historical status without a catalog definition transparent', () => {
+    const issue = createIssue(106, {
+      status: { id: 3, name: 'In Progress', is_closed: false },
+      journals: [
+        createJournal(1, '2026-01-02T00:00:00Z', statusChange(1, 6)),
+        createJournal(2, '2026-01-03T00:00:00Z', statusChange(6, 3)),
+      ],
+    })
+
+    render(
+      <StatusDwellTimePreview
+        issues={[issue]}
+        referenceTime="2026-01-04T00:00:00Z"
+        statusDefinitions={statusDefinitions}
+      />,
+    )
+
+    const table = screen.getByRole('table', {
+      name: /Statusverweilzeiten.*Issue #106/,
+    })
+    expect(within(table).getByText('New')).toBeVisible()
+    expect(within(table).getByText('Nicht bekannt')).toBeVisible()
+    expect(within(table).getByText('In Progress')).toBeVisible()
   })
 })

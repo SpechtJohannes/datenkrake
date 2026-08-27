@@ -69,6 +69,85 @@
   margin-bottom: 16px;
 }
 
+.cycle-time-distribution {
+  margin: 32px 0;
+}
+
+.histogram-scroll {
+  overflow-x: auto;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.histogram {
+  min-width: 520px;
+}
+
+.percentile-track {
+  position: relative;
+  height: 52px;
+  margin: 0 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.percentile-marker {
+  position: absolute;
+  bottom: 8px;
+  padding: 3px 7px;
+  border: 1px solid var(--accent-border);
+  border-radius: 4px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-size: 12px;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
+
+.histogram-bars {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.histogram-column {
+  display: grid;
+  grid-template-rows: 24px 160px auto;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+
+.histogram-count {
+  color: var(--text-h);
+  font-weight: 700;
+}
+
+.histogram-bar-area {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border-bottom: 1px solid var(--text);
+}
+
+.histogram-bar {
+  width: 70%;
+  border-radius: 5px 5px 0 0;
+  background: var(--accent);
+}
+
+.histogram-interval {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.histogram-x-axis {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+}
+
 .issue-preview {
   overflow: hidden;
   border: 1px solid var(--border);

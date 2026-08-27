@@ -28,6 +28,60 @@
   background: var(--surface);
 }
 
+.data-import-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  align-items: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  background: var(--accent-bg);
+}
+
+.data-import-panel h2,
+.data-import-panel p {
+  margin: 0;
+}
+
+.data-import-panel h2 {
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.data-source-summary {
+  margin-top: 7px !important;
+}
+
+.data-import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.data-import-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.data-import-button:focus-within {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 2px;
+}
+
+.data-import-error {
+  grid-column: 1 / -1;
+  padding-top: 12px;
+  border-top: 1px solid var(--error-border);
+  color: var(--error);
+}
+
 .dashboard-error {
   color: var(--error);
   border-color: var(--error-border);
@@ -937,6 +991,14 @@ tbody tr:last-child td {
 
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .data-import-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .data-import-button {
+    justify-self: start;
   }
 
   .throughput-distribution-metrics {

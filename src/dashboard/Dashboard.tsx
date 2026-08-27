@@ -3,8 +3,7 @@ import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
 import { CycleTimeOverview } from './CycleTimeOverview'
-import { IssuePreview } from './IssuePreview'
-import { StatusDwellTimePreview } from './StatusDwellTimePreview'
+import { TicketOverview } from './TicketOverview'
 import { ThroughputOverview } from './ThroughputOverview'
 import { WipOverview } from './WipOverview'
 
@@ -81,8 +80,7 @@ export function Dashboard() {
         statusDefinitions={state.statusDefinitions}
         referenceTime={state.referenceTime}
       />
-      <IssuePreview issues={state.issues} />
-      <StatusDwellTimePreview
+      <TicketOverview
         issues={state.issues}
         referenceTime={state.referenceTime}
         statusDefinitions={state.statusDefinitions}

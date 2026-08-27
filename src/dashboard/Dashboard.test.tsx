@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses } from '../data/statusDefinitions'
@@ -85,7 +86,8 @@ describe('Dashboard', () => {
     )
   })
 
-  it('loads issues and displays summary values and the first five issues', async () => {
+  it('loads issues once and displays all of them in the ticket overview', async () => {
+    const user = userEvent.setup()
     mockedGetIssues.mockResolvedValue(issues)
 
     render(<Dashboard />)
@@ -98,17 +100,17 @@ describe('Dashboard', () => {
       screen.getByLabelText('Issues mit Journaleinträgen: 3'),
     ).toBeVisible()
 
-    const table = screen.getByRole('table', { name: 'Issue-Vorschau' })
-    expect(within(table).getByText('Issue 101')).toBeVisible()
-    expect(within(table).getByText('Issue 105')).toBeVisible()
-    expect(within(table).queryByText('Issue 106')).not.toBeInTheDocument()
-    expect(within(table).getAllByRole('row')).toHaveLength(6)
-
-    const previewRow = within(table).getByText('Issue 103').closest('tr')
-    expect(previewRow).not.toBeNull()
-    expect(within(previewRow!).getByText('103')).toBeVisible()
-    expect(within(previewRow!).getByText('Erledigt')).toBeVisible()
-    expect(within(previewRow!).getByText('2')).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Tickets' })).toBeVisible()
+    expect(
+      screen.getAllByRole('button', {
+        name: /Ticket #10[1-6]: Issue 10[1-6]\./,
+      }),
+    ).toHaveLength(6)
+    const lastTicket = screen.getByRole('button', {
+      name: /Ticket #106: Issue 106\./,
+    })
+    await user.click(lastTicket)
+    await user.click(lastTicket)
     expect(mockedGetIssues).toHaveBeenCalledOnce()
     expect(mockedGetStatuses).toHaveBeenCalledOnce()
   })

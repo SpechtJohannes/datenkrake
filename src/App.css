@@ -517,6 +517,57 @@
   text-align: right;
 }
 
+.aggregated-dwell-times {
+  margin: 32px 0;
+}
+
+.aggregated-dwell-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.aggregated-dwell-list li {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.aggregated-dwell-header {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) repeat(3, minmax(110px, auto));
+  gap: 14px;
+  align-items: center;
+}
+
+.aggregated-dwell-header strong {
+  color: var(--text-h);
+  overflow-wrap: anywhere;
+}
+
+.aggregated-dwell-header span:first-of-type {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.aggregated-dwell-track {
+  height: 9px;
+  margin-top: 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--code-bg);
+}
+
+.aggregated-dwell-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
 .cycle-time-trend {
   margin: 32px 0;
 }
@@ -825,6 +876,14 @@ tbody tr:last-child td {
   .current-wip-status-track {
     grid-column: 1 / -1;
     grid-row: 2;
+  }
+
+  .aggregated-dwell-header {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .aggregated-dwell-header strong {
+    grid-column: 1 / -1;
   }
 
   .ticket-summary {

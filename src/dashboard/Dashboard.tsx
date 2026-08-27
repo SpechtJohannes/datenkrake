@@ -3,6 +3,7 @@ import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import { DashboardSummary } from './DashboardSummary'
 import { AgingWipOverview } from './AgingWipOverview'
+import { AggregatedStatusDwellTimes } from './AggregatedStatusDwellTimes'
 import { DashboardSettingsDialog } from './DashboardSettingsDialog'
 import { CycleTimeOverview } from './CycleTimeOverview'
 import { CurrentWipByStatus } from './CurrentWipByStatus'
@@ -159,6 +160,13 @@ export function Dashboard() {
       )}
       {visibility.currentWipByStatus && (
         <CurrentWipByStatus
+          issues={state.issues}
+          statusDefinitions={state.statusDefinitions}
+          referenceTime={state.referenceTime}
+        />
+      )}
+      {visibility.aggregatedStatusDwellTimes && (
+        <AggregatedStatusDwellTimes
           issues={state.issues}
           statusDefinitions={state.statusDefinitions}
           referenceTime={state.referenceTime}

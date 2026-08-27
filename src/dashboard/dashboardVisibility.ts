@@ -26,6 +26,11 @@ export const DASHBOARD_SECTIONS = [
     label: 'Aktueller WIP nach Status',
     defaultVisible: true,
   },
+  {
+    id: 'aggregatedStatusDwellTimes',
+    label: 'Aggregierte Statusverweilzeiten',
+    defaultVisible: true,
+  },
   { id: 'tickets', label: 'Tickets', defaultVisible: true },
 ] as const
 

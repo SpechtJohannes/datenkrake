@@ -1,5 +1,10 @@
 # React + TypeScript + Vite
 
+## Quality analysis
+
+Vitest coverage and the SonarQube Cloud CI integration are documented in
+[docs/sonar.md](docs/sonar.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

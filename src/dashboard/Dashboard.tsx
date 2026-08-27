@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
+import {
+  DataImportPanel,
+  type ActiveDataSource,
+} from '../import/DataImportPanel'
 import { DashboardSummary } from './DashboardSummary'
 import { AgingWipOverview } from './AgingWipOverview'
 import { AggregatedStatusDwellTimes } from './AggregatedStatusDwellTimes'
@@ -24,6 +28,7 @@ type DashboardState =
   | {
       status: 'success'
       issues: readonly RedmineIssue[]
+      source: ActiveDataSource
       statusDefinitions: readonly StatusDefinition[]
       referenceTime: number
     }
@@ -44,6 +49,7 @@ export function Dashboard() {
           setState({
             status: 'success',
             issues,
+            source: { kind: 'mock' },
             statusDefinitions,
             referenceTime: Date.now(),
           })
@@ -97,12 +103,34 @@ export function Dashboard() {
     settingsButtonRef.current?.focus()
   }
 
+  function useImportedIssues(
+    issues: readonly RedmineIssue[],
+    fileName: string,
+  ) {
+    setState((current) =>
+      current.status === 'success'
+        ? {
+            ...current,
+            issues,
+            source: { kind: 'import', fileName },
+            referenceTime: Date.now(),
+          }
+        : current,
+    )
+  }
+
   const hasVisibleSection = DASHBOARD_SECTIONS.some(
     (section) => visibility[section.id],
   )
 
   return (
     <section aria-label="Dashboard-Übersicht">
+      <DataImportPanel
+        issueCount={state.issues.length}
+        onImport={useImportedIssues}
+        source={state.source}
+      />
+
       <div className="dashboard-toolbar">
         <button
           className="secondary-button"

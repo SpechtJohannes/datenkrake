@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses } from '../data/statusDefinitions'
+import { createDataExport, serializeDataExport } from '../export/dataExport'
 import { Dashboard } from './Dashboard'
 
 vi.mock('../data/issues', () => ({
@@ -66,6 +67,23 @@ const issues = [
   createIssue(106, { id: 1, name: 'Neu' }, 0),
 ]
 
+function jsonFile(name: string, content: string): File {
+  const file = new File([content], name, { type: 'application/json' })
+  Object.defineProperty(file, 'text', {
+    value: vi.fn().mockResolvedValue(content),
+  })
+  return file
+}
+
+function exportedFile(name: string, exportedIssues: readonly RedmineIssue[]): File {
+  return jsonFile(
+    name,
+    serializeDataExport(
+      createDataExport(exportedIssues, new Date('2026-08-27T14:00:00.000Z')),
+    ),
+  )
+}
+
 describe('Dashboard', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -114,6 +132,134 @@ describe('Dashboard', () => {
     await user.click(lastTicket)
     expect(mockedGetIssues).toHaveBeenCalledOnce()
     expect(mockedGetStatuses).toHaveBeenCalledOnce()
+  })
+
+  it('initially identifies the mock data source and its issue count', async () => {
+    mockedGetIssues.mockResolvedValue(issues)
+
+    render(<Dashboard />)
+
+    expect(await screen.findByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
+    expect(screen.getByLabelText('JSON-Datei auswählen')).toHaveAttribute(
+      'accept',
+      'application/json,.json',
+    )
+  })
+
+  it('loads a local JSON file and uses its issues in the dashboard', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    const importedIssues = [
+      createIssue(901, { id: 1, name: 'Neu' }, 0),
+      createIssue(902, { id: 2, name: 'Erledigt' }, 1),
+    ]
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      exportedFile('mein-export.json', importedIssues),
+    )
+
+    expect(await screen.findByText('mein-export.json')).toBeVisible()
+    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /Ticket #901: Issue 901\./ }),
+    ).toBeVisible()
+    expect(
+      screen.queryByRole('button', { name: /Ticket #101: Issue 101\./ }),
+    ).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['broken.json', '{not json', 'kein gültiges JSON'],
+    [
+      'foreign.json',
+      JSON.stringify({
+        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
+        format: 'other',
+      }),
+      'kein gültiger Datenkrake-Export',
+    ],
+    [
+      'future.json',
+      JSON.stringify({
+        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
+        version: 2,
+      }),
+      'Version dieser Datenkrake-Datei wird nicht unterstützt',
+    ],
+    [
+      'invalid-issues.json',
+      JSON.stringify({
+        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
+        issues: [{ id: 1 }],
+      }),
+      'Datenstruktur der ausgewählten Datei ist ungültig',
+    ],
+  ])('shows an import error for %s and keeps the mock data', async (name, content, message) => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      jsonFile(name, content),
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(screen.getByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
+    expect(screen.getByLabelText('Geladene Issues: 6')).toBeVisible()
+  })
+
+  it('keeps an imported data set active when a later import fails', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      exportedFile('valid.json', [createIssue(901, { id: 1, name: 'Neu' }, 0)]),
+    )
+    await screen.findByText('Datenquelle: Importierte JSON-Datei · 1 Issue')
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      jsonFile('broken.json', '{broken'),
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'bisherige Datenbestand bleibt aktiv',
+    )
+    expect(screen.getByText('valid.json')).toBeVisible()
+    expect(screen.getByLabelText('Geladene Issues: 1')).toBeVisible()
+  })
+
+  it('replaces the first imported data set with a successful second import', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      exportedFile('first.json', [createIssue(901, { id: 1, name: 'Neu' }, 0)]),
+    )
+    await screen.findByText('first.json')
+    await user.upload(
+      screen.getByLabelText('JSON-Datei auswählen'),
+      exportedFile('second.json', [
+        createIssue(902, { id: 1, name: 'Neu' }, 0),
+        createIssue(903, { id: 2, name: 'Erledigt' }, 0),
+      ]),
+    )
+
+    expect(await screen.findByText('second.json')).toBeVisible()
+    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(screen.queryByText('first.json')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
   })
 
   it('shows an understandable error when loading fails', async () => {

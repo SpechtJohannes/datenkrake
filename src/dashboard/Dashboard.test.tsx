@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { getStatuses } from '../data/statusDefinitions'
 import { createDataExport, serializeDataExport } from '../export/dataExport'
+import { loadRedmineIssues } from '../redmine/loadRedmineIssues'
 import { Dashboard } from './Dashboard'
 
 vi.mock('../data/issues', () => ({
@@ -12,9 +13,13 @@ vi.mock('../data/issues', () => ({
 vi.mock('../data/statusDefinitions', () => ({
   getStatuses: vi.fn(),
 }))
+vi.mock('../redmine/loadRedmineIssues', () => ({
+  loadRedmineIssues: vi.fn(),
+}))
 
 const mockedGetIssues = vi.mocked(getIssues)
 const mockedGetStatuses = vi.mocked(getStatuses)
+const mockedLoadRedmineIssues = vi.mocked(loadRedmineIssues)
 
 function createIssue(
   id: number,
@@ -89,6 +94,7 @@ describe('Dashboard', () => {
     localStorage.clear()
     mockedGetIssues.mockReset()
     mockedGetStatuses.mockReset()
+    mockedLoadRedmineIssues.mockReset()
     mockedGetStatuses.mockResolvedValue([
       { id: 1, name: 'Neu', is_closed: false },
       { id: 2, name: 'Erledigt', is_closed: true },
@@ -260,6 +266,102 @@ describe('Dashboard', () => {
     expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
     expect(screen.queryByText('first.json')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
+  })
+
+  it('uses successfully loaded Redmine issues as the active dashboard data', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    mockedLoadRedmineIssues.mockResolvedValue([
+      createIssue(951, { id: 1, name: 'Neu' }, 1),
+      createIssue(952, { id: 2, name: 'Erledigt' }, 0),
+    ])
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(screen.getByLabelText('Redmine API-Key'), 'top-secret')
+    await user.type(screen.getByLabelText('Query-Parameter'), 'project_id=42')
+    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+
+    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /Ticket #951: Issue 951\./ }),
+    ).toBeVisible()
+    expect(screen.queryByText('top-secret')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Redmine API-Key')).toHaveValue('')
+    const persistedValues = Array.from({ length: localStorage.length }, (_, index) =>
+      localStorage.getItem(localStorage.key(index) ?? ''),
+    ).join(' ')
+    expect(persistedValues).not.toContain('top-secret')
+  })
+
+  it('replaces an earlier Redmine result with a successful reload', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    mockedLoadRedmineIssues
+      .mockResolvedValueOnce([createIssue(951, { id: 1, name: 'Neu' }, 0)])
+      .mockResolvedValueOnce([
+        createIssue(961, { id: 1, name: 'Neu' }, 0),
+        createIssue(962, { id: 2, name: 'Erledigt' }, 0),
+      ])
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+
+    const baseUrlInput = screen.getByLabelText('Redmine Basis-URL')
+    const apiKeyInput = screen.getByLabelText('Redmine API-Key')
+    await user.type(baseUrlInput, 'https://redmine.test')
+    await user.type(apiKeyInput, 'first-key')
+    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await screen.findByText('Datenquelle: Redmine · 1 Issue')
+    await user.type(apiKeyInput, 'second-key')
+    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+
+    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(screen.queryByText('Issue 951')).not.toBeInTheDocument()
+    expect(screen.getByText('Issue 962')).toBeVisible()
+  })
+
+  it('exports only the issues previously loaded from Redmine', async () => {
+    const user = userEvent.setup()
+    mockedGetIssues.mockResolvedValue(issues)
+    mockedLoadRedmineIssues.mockResolvedValue([
+      createIssue(971, { id: 1, name: 'Neu' }, 0),
+    ])
+    render(<Dashboard />)
+    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(screen.getByLabelText('Redmine API-Key'), 'export-secret')
+    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await screen.findByText('Datenquelle: Redmine · 1 Issue')
+
+    const createObjectURL = vi.fn((blob: Blob) => {
+      void blob
+      return 'blob:redmine-export'
+    })
+    const revokeObjectURL = vi.fn()
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL })
+    const anchorClick = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined)
+
+    await user.click(screen.getByRole('button', { name: 'JSON-Datei speichern' }))
+
+    const blob = createObjectURL.mock.calls[0][0] as Blob
+    const json = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.addEventListener('load', () => resolve(String(reader.result)))
+      reader.addEventListener('error', () => reject(reader.error))
+      reader.readAsText(blob)
+    })
+    const exported = JSON.parse(json) as { issues: RedmineIssue[] }
+    expect(exported.issues.map(({ id }) => id)).toEqual([971])
+    expect(json).not.toContain('export-secret')
+    expect(json).not.toContain('redmine.test')
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:redmine-export')
+
+    anchorClick.mockRestore()
+    vi.unstubAllGlobals()
   })
 
   it('shows an understandable error when loading fails', async () => {

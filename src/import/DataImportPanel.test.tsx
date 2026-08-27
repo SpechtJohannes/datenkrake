@@ -75,6 +75,7 @@ describe('DataImportPanel export', () => {
       <DataImportPanel
         issues={[issue(1)]}
         onImport={vi.fn()}
+        onLoadRedmine={vi.fn()}
         source={{ kind: 'mock' }}
       />,
     )
@@ -91,6 +92,7 @@ describe('DataImportPanel export', () => {
       <DataImportPanel
         issues={currentIssues}
         onImport={vi.fn()}
+        onLoadRedmine={vi.fn()}
         source={{ kind: 'mock' }}
       />,
     )
@@ -118,6 +120,7 @@ describe('DataImportPanel export', () => {
       <DataImportPanel
         issues={importedIssues}
         onImport={vi.fn()}
+        onLoadRedmine={vi.fn()}
         source={{ kind: 'import', fileName: 'import.json' }}
       />,
     )
@@ -136,6 +139,7 @@ describe('DataImportPanel export', () => {
       <DataImportPanel
         issues={[issue(1)]}
         onImport={vi.fn()}
+        onLoadRedmine={vi.fn()}
         source={{ kind: 'mock' }}
       />,
     )
@@ -165,6 +169,7 @@ describe('DataImportPanel export', () => {
       <DataImportPanel
         issues={[issue(1)]}
         onImport={vi.fn()}
+        onLoadRedmine={vi.fn()}
         source={{ kind: 'mock' }}
       />,
     )

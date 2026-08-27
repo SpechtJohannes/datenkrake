@@ -88,6 +88,39 @@
   color: var(--error);
 }
 
+.redmine-source-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: end;
+  padding-top: 16px;
+  border-top: 1px solid var(--accent-border);
+}
+
+.redmine-source-form h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.redmine-source-form label {
+  display: grid;
+  gap: 5px;
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.redmine-source-form input {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  background: var(--surface);
+  font: inherit;
+}
+
 .dashboard-error {
   color: var(--error);
   border-color: var(--error-border);
@@ -1009,6 +1042,10 @@ tbody tr:last-child td {
 
   .data-actions {
     flex-wrap: wrap;
+  }
+
+  .redmine-source-form {
+    grid-template-columns: 1fr;
   }
 
   .throughput-distribution-metrics {

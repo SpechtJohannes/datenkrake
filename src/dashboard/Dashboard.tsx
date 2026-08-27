@@ -5,6 +5,10 @@ import {
   DataImportPanel,
   type ActiveDataSource,
 } from '../import/DataImportPanel'
+import {
+  loadRedmineIssues,
+  type RedmineLoadRequest,
+} from '../redmine/loadRedmineIssues'
 import { DashboardSummary } from './DashboardSummary'
 import { AgingWipOverview } from './AgingWipOverview'
 import { AggregatedStatusDwellTimes } from './AggregatedStatusDwellTimes'
@@ -119,6 +123,20 @@ export function Dashboard() {
     )
   }
 
+  async function useRedmineIssues(request: RedmineLoadRequest) {
+    const issues = await loadRedmineIssues(request)
+    setState((current) =>
+      current.status === 'success'
+        ? {
+            ...current,
+            issues,
+            source: { kind: 'redmine' },
+            referenceTime: Date.now(),
+          }
+        : current,
+    )
+  }
+
   const hasVisibleSection = DASHBOARD_SECTIONS.some(
     (section) => visibility[section.id],
   )
@@ -128,6 +146,7 @@ export function Dashboard() {
       <DataImportPanel
         issues={state.issues}
         onImport={useImportedIssues}
+        onLoadRedmine={useRedmineIssues}
         source={state.source}
       />
 

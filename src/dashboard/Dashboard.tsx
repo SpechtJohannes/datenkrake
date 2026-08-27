@@ -5,6 +5,7 @@ import { DashboardSummary } from './DashboardSummary'
 import { CycleTimeOverview } from './CycleTimeOverview'
 import { IssuePreview } from './IssuePreview'
 import { StatusDwellTimePreview } from './StatusDwellTimePreview'
+import { ThroughputOverview } from './ThroughputOverview'
 
 type DashboardState =
   | { status: 'loading' }
@@ -69,6 +70,10 @@ export function Dashboard() {
         issues={state.issues}
         statusDefinitions={state.statusDefinitions}
         referenceTime={state.referenceTime}
+      />
+      <ThroughputOverview
+        issues={state.issues}
+        statusDefinitions={state.statusDefinitions}
       />
       <IssuePreview issues={state.issues} />
       <StatusDwellTimePreview

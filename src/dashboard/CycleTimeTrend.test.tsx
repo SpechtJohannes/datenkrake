@@ -126,7 +126,7 @@ describe('CycleTimeTrend', () => {
     await user.click(firstPoint)
 
     const firstDetails = screen.getByLabelText('Details zu Issue #101')
-    expect(firstDetails).toHaveAttribute('tabindex', '0')
+    expect(firstDetails).not.toHaveAttribute('tabindex')
     expect(within(firstDetails).getByText('#101')).toBeVisible()
     expect(within(firstDetails).getByText('Erstes Ticket')).toBeVisible()
     expect(within(firstDetails).getByText('2d')).toBeVisible()
@@ -134,6 +134,9 @@ describe('CycleTimeTrend', () => {
       'datetime',
       '2026-01-02T00:00:00Z',
     )
+
+    await user.click(firstDetails)
+    expect(screen.getByLabelText('Details zu Issue #101')).toBeVisible()
 
     await user.click(secondPoint)
     expect(

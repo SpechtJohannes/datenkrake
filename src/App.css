@@ -61,6 +61,14 @@
   line-height: 1;
 }
 
+.cycle-time-summary {
+  margin-top: 16px;
+}
+
+#cycle-time-summary-title {
+  margin-bottom: 16px;
+}
+
 .issue-preview {
   overflow: hidden;
   border: 1px solid var(--border);

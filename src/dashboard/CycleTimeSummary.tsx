@@ -23,6 +23,14 @@ export function CycleTimeSummary({
     metrics.medianCompletedDurationMs === null
       ? 'Nicht verfügbar'
       : formatDurationMs(metrics.medianCompletedDurationMs)
+  const p85Label =
+    metrics.p85CompletedDurationMs === null
+      ? 'Nicht verfügbar'
+      : formatDurationMs(metrics.p85CompletedDurationMs)
+  const p95Label =
+    metrics.p95CompletedDurationMs === null
+      ? 'Nicht verfügbar'
+      : formatDurationMs(metrics.p95CompletedDurationMs)
 
   return (
     <section aria-labelledby="cycle-time-summary-title">
@@ -33,6 +41,14 @@ export function CycleTimeSummary({
           <dd aria-label={`Median Cycle Time: ${medianLabel}`}>
             {medianLabel}
           </dd>
+        </div>
+        <div className="summary-card">
+          <dt>P85 Cycle Time</dt>
+          <dd aria-label={`P85 Cycle Time: ${p85Label}`}>{p85Label}</dd>
+        </div>
+        <div className="summary-card">
+          <dt>P95 Cycle Time</dt>
+          <dd aria-label={`P95 Cycle Time: ${p95Label}`}>{p95Label}</dd>
         </div>
         <div className="summary-card">
           <dt>Abgeschlossene Tickets</dt>

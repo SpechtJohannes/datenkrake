@@ -5,6 +5,8 @@ import type { StatusHistoryIssue } from './statusHistory'
 
 export interface CycleTimeMetrics {
   medianCompletedDurationMs: number | null
+  p85CompletedDurationMs: number | null
+  p95CompletedDurationMs: number | null
   completedCount: number
   runningCount: number
 }
@@ -46,23 +48,30 @@ export function calculateCycleTimeMetrics(
   }
 
   return {
-    medianCompletedDurationMs: calculateMedian(completedDurations),
+    medianCompletedDurationMs: calculatePercentile(completedDurations, 0.5),
+    p85CompletedDurationMs: calculatePercentile(completedDurations, 0.85),
+    p95CompletedDurationMs: calculatePercentile(completedDurations, 0.95),
     completedCount,
     runningCount,
   }
 }
 
-function calculateMedian(values: readonly number[]): number | null {
-  if (values.length === 0) {
+export function calculatePercentile(
+  values: readonly number[],
+  percentile: number,
+): number | null {
+  if (values.length === 0 || percentile < 0 || percentile > 1) {
     return null
   }
 
   const sortedValues = [...values].sort((left, right) => left - right)
-  const middleIndex = Math.floor(sortedValues.length / 2)
+  const rank = (sortedValues.length - 1) * percentile
+  const lowerIndex = Math.floor(rank)
+  const upperIndex = Math.ceil(rank)
+  const interpolationWeight = rank - lowerIndex
 
-  if (sortedValues.length % 2 === 1) {
-    return sortedValues[middleIndex]
-  }
-
-  return (sortedValues[middleIndex - 1] + sortedValues[middleIndex]) / 2
+  return (
+    sortedValues[lowerIndex] +
+    (sortedValues[upperIndex] - sortedValues[lowerIndex]) * interpolationWeight
+  )
 }

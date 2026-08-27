@@ -331,6 +331,89 @@
   font-size: 13px;
 }
 
+.throughput-distribution {
+  margin: 32px 0;
+}
+
+.throughput-distribution-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.throughput-distribution-metrics div {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.throughput-distribution-metrics dt {
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+
+.throughput-distribution-metrics dd {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.throughput-distribution-scroll {
+  overflow-x: auto;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.throughput-distribution-list {
+  display: grid;
+  gap: 10px;
+  min-width: 520px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.throughput-distribution-list li {
+  display: grid;
+  grid-template-columns: 110px minmax(260px, 1fr) 42px;
+  gap: 14px;
+  align-items: center;
+}
+
+.throughput-distribution-list li > span {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.throughput-distribution-track {
+  height: 18px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--code-bg);
+}
+
+.throughput-distribution-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.throughput-distribution-bar-zero {
+  width: 0 !important;
+  border-left: 2px solid var(--accent-border);
+}
+
+.throughput-distribution-list strong {
+  color: var(--text-h);
+  text-align: right;
+}
+
 .wip-trend {
   margin: 32px 0;
 }
@@ -854,6 +937,10 @@ tbody tr:last-child td {
 
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .throughput-distribution-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .aging-wip-ticket {

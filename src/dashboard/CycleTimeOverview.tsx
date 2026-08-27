@@ -2,9 +2,11 @@ import type { RedmineIssue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import { calculateCycleTimeHistogram } from '../domain/cycleTimeHistogram'
 import { calculateCycleTimeMetrics } from '../domain/cycleTimeMetrics'
+import { calculateCycleTimeTrend } from '../domain/cycleTimeTrend'
 import type { ReferenceTime } from '../domain/statusDwellTime'
 import { CycleTimeDistribution } from './CycleTimeDistribution'
 import { CycleTimeSummary } from './CycleTimeSummary'
+import { CycleTimeTrend } from './CycleTimeTrend'
 
 interface CycleTimeOverviewProps {
   issues: readonly RedmineIssue[]
@@ -27,11 +29,13 @@ export function CycleTimeOverview({
     statusDefinitions,
     referenceTime,
   )
+  const trendPoints = calculateCycleTimeTrend(issues, statusDefinitions)
 
   return (
     <>
       <CycleTimeSummary metrics={metrics} />
       <CycleTimeDistribution histogram={histogram} metrics={metrics} />
+      <CycleTimeTrend metrics={metrics} points={trendPoints} />
     </>
   )
 }

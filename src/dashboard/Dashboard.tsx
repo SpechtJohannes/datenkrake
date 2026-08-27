@@ -2,10 +2,15 @@ import { useEffect, useState } from 'react'
 import { getIssues, type RedmineIssue } from '../data/issues'
 import { DashboardSummary } from './DashboardSummary'
 import { IssuePreview } from './IssuePreview'
+import { StatusDwellTimePreview } from './StatusDwellTimePreview'
 
 type DashboardState =
   | { status: 'loading' }
-  | { status: 'success'; issues: readonly RedmineIssue[] }
+  | {
+      status: 'success'
+      issues: readonly RedmineIssue[]
+      referenceTime: number
+    }
   | { status: 'error' }
 
 export function Dashboard() {
@@ -17,7 +22,7 @@ export function Dashboard() {
     getIssues().then(
       (issues) => {
         if (isActive) {
-          setState({ status: 'success', issues })
+          setState({ status: 'success', issues, referenceTime: Date.now() })
         }
       },
       () => {
@@ -53,6 +58,10 @@ export function Dashboard() {
     <section aria-label="Dashboard-Übersicht">
       <DashboardSummary issues={state.issues} />
       <IssuePreview issues={state.issues} />
+      <StatusDwellTimePreview
+        issues={state.issues}
+        referenceTime={state.referenceTime}
+      />
     </section>
   )
 }

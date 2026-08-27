@@ -9,7 +9,7 @@ export function IssuePreview({ issues }: IssuePreviewProps) {
     <section className="issue-preview" aria-labelledby="issue-preview-title">
       <h2 id="issue-preview-title">Vorschau der ersten fünf Issues</h2>
       <div className="table-scroll">
-        <table>
+        <table aria-label="Issue-Vorschau">
           <thead>
             <tr>
               <th scope="col">ID</th>

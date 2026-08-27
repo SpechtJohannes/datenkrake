@@ -60,6 +60,12 @@
   justify-content: center;
 }
 
+.data-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .data-import-button input {
   position: absolute;
   width: 1px;
@@ -999,6 +1005,10 @@ tbody tr:last-child td {
 
   .data-import-button {
     justify-self: start;
+  }
+
+  .data-actions {
+    flex-wrap: wrap;
   }
 
   .throughput-distribution-metrics {

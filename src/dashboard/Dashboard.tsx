@@ -126,7 +126,7 @@ export function Dashboard() {
   return (
     <section aria-label="Dashboard-Übersicht">
       <DataImportPanel
-        issueCount={state.issues.length}
+        issues={state.issues}
         onImport={useImportedIssues}
         source={state.source}
       />

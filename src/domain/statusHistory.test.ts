@@ -200,4 +200,39 @@ describe('reconstructStatusHistory', () => {
       statusName: 'In Progress',
     })
   })
+
+  it('resolves historical names from supplied status definitions', () => {
+    const history = reconstructStatusHistory(
+      createIssue({
+        status: { id: 2, name: 'Refined', is_closed: false },
+        journals: [
+          createJournal(1, '2026-01-02T00:00:00Z', [statusChange('1', '2')]),
+        ],
+      }),
+      [
+        { id: 1, name: 'New', is_closed: false },
+        { id: 2, name: 'Refined', is_closed: false },
+      ],
+    )
+
+    expect(history.map((phase) => phase.statusName)).toEqual(['New', 'Refined'])
+  })
+
+  it('keeps a historical name null when the catalog has no definition', () => {
+    const history = reconstructStatusHistory(
+      createIssue({
+        status: { id: 2, name: 'Refined', is_closed: false },
+        journals: [
+          createJournal(1, '2026-01-02T00:00:00Z', [statusChange('1', '6')]),
+          createJournal(2, '2026-01-03T00:00:00Z', [statusChange('6', '2')]),
+        ],
+      }),
+      [
+        { id: 1, name: 'New', is_closed: false },
+        { id: 2, name: 'Refined', is_closed: false },
+      ],
+    )
+
+    expect(history.find((phase) => phase.statusId === 6)?.statusName).toBeNull()
+  })
 })

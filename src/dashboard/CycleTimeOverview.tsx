@@ -12,12 +12,18 @@ interface CycleTimeOverviewProps {
   issues: readonly RedmineIssue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
+  showDistribution: boolean
+  showSummary: boolean
+  showTrend: boolean
 }
 
 export function CycleTimeOverview({
   issues,
   statusDefinitions,
   referenceTime,
+  showDistribution,
+  showSummary,
+  showTrend,
 }: CycleTimeOverviewProps) {
   const metrics = calculateCycleTimeMetrics(
     issues,
@@ -33,9 +39,11 @@ export function CycleTimeOverview({
 
   return (
     <>
-      <CycleTimeSummary metrics={metrics} />
-      <CycleTimeDistribution histogram={histogram} metrics={metrics} />
-      <CycleTimeTrend metrics={metrics} points={trendPoints} />
+      {showSummary && <CycleTimeSummary metrics={metrics} />}
+      {showDistribution && (
+        <CycleTimeDistribution histogram={histogram} metrics={metrics} />
+      )}
+      {showTrend && <CycleTimeTrend metrics={metrics} points={trendPoints} />}
     </>
   )
 }

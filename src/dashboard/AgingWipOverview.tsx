@@ -1,10 +1,10 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import { calculateAgingWip, type AgingWipItem } from '../domain/agingWip'
 import type { ReferenceTime } from '../domain/statusDwellTime'
 
 interface AgingWipOverviewProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
 }

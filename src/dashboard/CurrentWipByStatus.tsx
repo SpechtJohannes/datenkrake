@@ -1,4 +1,4 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import {
   calculateCurrentWipByStatus,
@@ -7,7 +7,7 @@ import {
 import type { ReferenceTime } from '../domain/statusDwellTime'
 
 interface CurrentWipByStatusProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
 }

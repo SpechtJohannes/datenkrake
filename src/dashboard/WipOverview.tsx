@@ -1,11 +1,11 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import type { ReferenceTime } from '../domain/statusDwellTime'
 import { calculateWipHistory } from '../domain/wipHistory'
 import { WipTrend } from './WipTrend'
 
 interface WipOverviewProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
 }

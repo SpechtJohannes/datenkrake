@@ -1,4 +1,4 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import {
   calculateThroughputDistribution,
@@ -6,7 +6,7 @@ import {
 } from '../domain/throughputDistribution'
 
 interface ThroughputDistributionProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
 }
 

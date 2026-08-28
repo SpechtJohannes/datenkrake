@@ -58,6 +58,23 @@ export interface RedmineIssue {
   journals: RedmineJournal[]
 }
 
+export type IssueStatusChange = Partial<RedmineJournalDetail>
+
+export interface IssueStatusJournal {
+  id: number
+  created_on: string
+  details: readonly IssueStatusChange[]
+}
+
+export interface Issue {
+  id: number
+  subject: string
+  status: RedmineStatus
+  created_on: string
+  closed_on: string | null
+  journals: IssueStatusJournal[]
+}
+
 export interface RedmineIssuesResponse {
   issues: RedmineIssue[]
   total_count: number

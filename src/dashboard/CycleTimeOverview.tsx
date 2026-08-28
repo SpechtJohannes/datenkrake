@@ -1,4 +1,4 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import { calculateCycleTimeHistogram } from '../domain/cycleTimeHistogram'
 import { calculateCycleTimeMetrics } from '../domain/cycleTimeMetrics'
@@ -9,7 +9,7 @@ import { CycleTimeSummary } from './CycleTimeSummary'
 import { CycleTimeTrend } from './CycleTimeTrend'
 
 interface CycleTimeOverviewProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
   showDistribution: boolean

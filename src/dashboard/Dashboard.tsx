@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getIssues, type RedmineIssue } from '../data/issues'
+import { getIssues, type Issue } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
 import {
   DataImportPanel,
@@ -31,7 +31,7 @@ type DashboardState =
   | { status: 'loading' }
   | {
       status: 'success'
-      issues: readonly RedmineIssue[]
+      issues: readonly Issue[]
       source: ActiveDataSource
       statusDefinitions: readonly StatusDefinition[]
       referenceTime: number
@@ -107,10 +107,7 @@ export function Dashboard() {
     settingsButtonRef.current?.focus()
   }
 
-  function useImportedIssues(
-    issues: readonly RedmineIssue[],
-    fileName: string,
-  ) {
+  function useImportedIssues(issues: readonly Issue[], fileName: string) {
     setState((current) =>
       current.status === 'success'
         ? {

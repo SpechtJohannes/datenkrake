@@ -23,7 +23,7 @@ function apiIssue(
 }
 
 describe('mapRedmineIssue', () => {
-  it('maps a complete Redmine issue without sharing nested objects', () => {
+  it('maps only the fields required by the domain', () => {
     const source = apiIssue({
       assigned_to: { id: 6, name: 'Grace' },
       category: { id: 7, name: 'Backend' },
@@ -52,6 +52,9 @@ describe('mapRedmineIssue', () => {
     })
     expect(mapped).not.toBe(source)
     expect(mapped.status).not.toBe(source.status)
+    expect(mapped).not.toHaveProperty('author')
+    expect(mapped).not.toHaveProperty('assigned_to')
+    expect(mapped).not.toHaveProperty('description')
     expect(mapped).not.toHaveProperty('custom_fields')
   })
 
@@ -84,7 +87,7 @@ describe('mapRedmineIssue', () => {
     expect(mapRedmineIssue(apiIssue()).journals).toEqual([])
   })
 
-  it('preserves status changes and all details in their original order', () => {
+  it('keeps only status changes and discards journal metadata', () => {
     const mapped = mapRedmineIssue(
       apiIssue({
         journals: [
@@ -127,9 +130,12 @@ describe('mapRedmineIssue', () => {
     expect(mapped.journals[0].details).toEqual([
       { property: 'attr', name: 'status_id', old_value: '1', new_value: '3' },
     ])
+    expect(mapped.journals[0]).not.toHaveProperty('user')
+    expect(mapped.journals[0]).not.toHaveProperty('notes')
+    expect(mapped.journals[0]).not.toHaveProperty('private_notes')
   })
 
-  it('does not invent values for missing or null journal fields', () => {
+  it('drops journals that do not contain a complete status change', () => {
     const mapped = mapRedmineIssue(
       apiIssue({
         journals: [

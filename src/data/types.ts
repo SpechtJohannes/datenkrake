@@ -63,7 +63,7 @@ export type IssueStatusChange = Partial<RedmineJournalDetail>
 export interface IssueStatusJournal {
   id: number
   created_on: string
-  details: IssueStatusChange[]
+  details: readonly IssueStatusChange[]
 }
 
 export interface Issue {

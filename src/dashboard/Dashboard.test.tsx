@@ -80,7 +80,10 @@ function jsonFile(name: string, content: string): File {
   return file
 }
 
-function exportedFile(name: string, exportedIssues: readonly RedmineIssue[]): File {
+function exportedFile(
+  name: string,
+  exportedIssues: readonly RedmineIssue[],
+): File {
   return jsonFile(
     name,
     serializeDataExport(
@@ -145,7 +148,9 @@ describe('Dashboard', () => {
 
     render(<Dashboard />)
 
-    expect(await screen.findByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Mockdaten · 6 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('JSON-Datei auswählen')).toHaveAttribute(
       'accept',
       'application/json,.json',
@@ -168,7 +173,9 @@ describe('Dashboard', () => {
     )
 
     expect(await screen.findByText('mein-export.json')).toBeVisible()
-    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(
+      screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
     expect(
       screen.getByRole('button', { name: /Ticket #901: Issue 901\./ }),
@@ -204,21 +211,26 @@ describe('Dashboard', () => {
       }),
       'Datenstruktur der ausgewählten Datei ist ungültig',
     ],
-  ])('shows an import error for %s and keeps the mock data', async (name, content, message) => {
-    const user = userEvent.setup()
-    mockedGetIssues.mockResolvedValue(issues)
-    render(<Dashboard />)
-    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+  ])(
+    'shows an import error for %s and keeps the mock data',
+    async (name, content, message) => {
+      const user = userEvent.setup()
+      mockedGetIssues.mockResolvedValue(issues)
+      render(<Dashboard />)
+      await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
-    await user.upload(
-      screen.getByLabelText('JSON-Datei auswählen'),
-      jsonFile(name, content),
-    )
+      await user.upload(
+        screen.getByLabelText('JSON-Datei auswählen'),
+        jsonFile(name, content),
+      )
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(message)
-    expect(screen.getByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
-    expect(screen.getByLabelText('Geladene Issues: 6')).toBeVisible()
-  })
+      expect(await screen.findByRole('alert')).toHaveTextContent(message)
+      expect(
+        screen.getByText('Datenquelle: Mockdaten · 6 Issues'),
+      ).toBeVisible()
+      expect(screen.getByLabelText('Geladene Issues: 6')).toBeVisible()
+    },
+  )
 
   it('keeps an imported data set active when a later import fails', async () => {
     const user = userEvent.setup()
@@ -263,7 +275,9 @@ describe('Dashboard', () => {
     )
 
     expect(await screen.findByText('second.json')).toBeVisible()
-    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(
+      screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues'),
+    ).toBeVisible()
     expect(screen.queryByText('first.json')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
   })
@@ -278,20 +292,28 @@ describe('Dashboard', () => {
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
-    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(
+      screen.getByLabelText('Redmine Basis-URL'),
+      'https://redmine.test',
+    )
     await user.type(screen.getByLabelText('Redmine API-Key'), 'top-secret')
     await user.type(screen.getByLabelText('Query-Parameter'), 'project_id=42')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
 
-    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Redmine · 2 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
     expect(
       screen.getByRole('button', { name: /Ticket #951: Issue 951\./ }),
     ).toBeVisible()
     expect(screen.queryByText('top-secret')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Redmine API-Key')).toHaveValue('')
-    const persistedValues = Array.from({ length: localStorage.length }, (_, index) =>
-      localStorage.getItem(localStorage.key(index) ?? ''),
+    const persistedValues = Array.from(
+      { length: localStorage.length },
+      (_, index) => localStorage.getItem(localStorage.key(index) ?? ''),
     ).join(' ')
     expect(persistedValues).not.toContain('top-secret')
   })
@@ -312,12 +334,18 @@ describe('Dashboard', () => {
     const apiKeyInput = screen.getByLabelText('Redmine API-Key')
     await user.type(baseUrlInput, 'https://redmine.test')
     await user.type(apiKeyInput, 'first-key')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
     await screen.findByText('Datenquelle: Redmine · 1 Issue')
     await user.type(apiKeyInput, 'second-key')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
 
-    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Redmine · 2 Issues'),
+    ).toBeVisible()
     expect(screen.queryByText('Issue 951')).not.toBeInTheDocument()
     expect(screen.getByText('Issue 962')).toBeVisible()
   })
@@ -330,9 +358,14 @@ describe('Dashboard', () => {
     ])
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
-    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(
+      screen.getByLabelText('Redmine Basis-URL'),
+      'https://redmine.test',
+    )
     await user.type(screen.getByLabelText('Redmine API-Key'), 'export-secret')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
     await screen.findByText('Datenquelle: Redmine · 1 Issue')
 
     const createObjectURL = vi.fn((blob: Blob) => {
@@ -345,7 +378,9 @@ describe('Dashboard', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined)
 
-    await user.click(screen.getByRole('button', { name: 'JSON-Datei speichern' }))
+    await user.click(
+      screen.getByRole('button', { name: 'JSON-Datei speichern' }),
+    )
 
     const blob = createObjectURL.mock.calls[0][0] as Blob
     const json = await new Promise<string>((resolve, reject) => {

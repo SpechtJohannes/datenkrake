@@ -1,10 +1,10 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import { calculateWeeklyThroughput } from '../domain/weeklyThroughput'
 import { ThroughputChart } from './ThroughputChart'
 
 interface ThroughputOverviewProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
 }
 

@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
-import type { RedmineIssue } from '../data/types'
+import type { Issue, RedmineIssue } from '../data/types'
 import {
   createDataExport,
   createDataExportFileName,
@@ -14,9 +14,9 @@ export type ActiveDataSource =
   { kind: 'mock' } | { kind: 'import'; fileName: string } | { kind: 'redmine' }
 
 interface DataImportPanelProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   source: ActiveDataSource
-  onImport: (issues: readonly RedmineIssue[], fileName: string) => void
+  onImport: (issues: readonly Issue[], fileName: string) => void
   onLoadRedmine: (request: RedmineLoadRequest) => Promise<void>
 }
 
@@ -125,7 +125,10 @@ export function DataImportPanel({
     let objectUrl: string | undefined
     let downloadLink: HTMLAnchorElement | undefined
     try {
-      const dataExport = createDataExport(issues, exportedAt)
+      const dataExport = createDataExport(
+        issues as readonly RedmineIssue[],
+        exportedAt,
+      )
       const blob = new Blob([serializeDataExport(dataExport)], {
         type: 'application/json',
       })

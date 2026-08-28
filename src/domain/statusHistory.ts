@@ -1,19 +1,14 @@
 import type {
-  RedmineIssue,
-  RedmineJournal,
-  RedmineJournalDetail,
+  Issue,
+  IssueStatusJournal,
   StatusDefinition,
 } from '../data/issues'
 
-type StatusHistoryJournal = Pick<RedmineJournal, 'id' | 'created_on'> & {
-  details: readonly Partial<RedmineJournalDetail>[]
-}
-
 export type StatusHistoryIssue = Pick<
-  RedmineIssue,
+  Issue,
   'status' | 'created_on' | 'closed_on'
 > & {
-  journals: readonly StatusHistoryJournal[]
+  journals: readonly IssueStatusJournal[]
 }
 
 export interface StatusPhase {

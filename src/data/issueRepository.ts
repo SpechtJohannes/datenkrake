@@ -1,5 +1,5 @@
-import type { RedmineIssue } from './types'
+import type { Issue } from './types'
 
 export interface IssueRepository {
-  getIssues(): Promise<readonly RedmineIssue[]>
+  getIssues(): Promise<readonly Issue[]>
 }

@@ -1,7 +1,7 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 
 interface DashboardSummaryProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
 }
 
 export function DashboardSummary({ issues }: DashboardSummaryProps) {

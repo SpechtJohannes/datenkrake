@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import { calculateCycleTime, type CycleTimeResult } from '../domain/cycleTime'
 import {
@@ -10,7 +10,7 @@ import {
 import { CycleTimeDetails } from './CycleTimeDetails'
 
 interface TicketOverviewProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   referenceTime: ReferenceTime
   statusDefinitions: readonly StatusDefinition[]
 }
@@ -113,7 +113,7 @@ function TicketSummaryValue({ label, value }: TicketSummaryValueProps) {
 interface TicketDetailsProps {
   cycleTime: CycleTimeResult | null
   detailsId: string
-  issue: RedmineIssue
+  issue: Issue
   referenceTime: ReferenceTime
   statusDefinitions: readonly StatusDefinition[]
 }

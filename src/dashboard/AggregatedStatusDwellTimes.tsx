@@ -1,4 +1,4 @@
-import type { RedmineIssue } from '../data/issues'
+import type { Issue } from '../data/issues'
 import type { StatusDefinition } from '../data/statusDefinitions'
 import {
   calculateAggregatedStatusDwellTimes,
@@ -9,7 +9,7 @@ import type { ReferenceTime } from '../domain/statusDwellTime'
 const DAY_MS = 24 * 60 * 60 * 1000
 
 interface AggregatedStatusDwellTimesProps {
-  issues: readonly RedmineIssue[]
+  issues: readonly Issue[]
   statusDefinitions: readonly StatusDefinition[]
   referenceTime: ReferenceTime
 }

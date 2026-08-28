@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getIssues, type RedmineIssue } from '../data/issues'
+import { getIssues, type Issue } from '../data/issues'
 import { getStatuses } from '../data/statusDefinitions'
 import { createDataExport, serializeDataExport } from '../export/dataExport'
 import { loadRedmineIssues } from '../redmine/loadRedmineIssues'
@@ -25,40 +25,24 @@ function createIssue(
   id: number,
   status: { id: number; name: string },
   journalCount: number,
-): RedmineIssue {
-  const reference = { id: 1, name: 'Beispiel' }
-
+): Issue {
   return {
     id,
-    project: reference,
-    tracker: reference,
     status: { ...status, is_closed: false },
-    priority: reference,
-    author: reference,
-    assigned_to: reference,
-    category: reference,
-    fixed_version: reference,
     subject: `Issue ${id}`,
-    description: 'Testbeschreibung',
-    start_date: '2026-01-01',
-    due_date: '2026-01-02',
-    done_ratio: 0,
-    is_private: false,
-    estimated_hours: 1,
-    total_estimated_hours: null,
-    spent_hours: 0,
-    total_spent_hours: null,
-    custom_fields: [],
     created_on: '2026-01-01T00:00:00Z',
-    updated_on: '2026-01-01T00:00:00Z',
     closed_on: null,
     journals: Array.from({ length: journalCount }, (_, index) => ({
       id: id * 10 + index,
-      user: reference,
-      notes: 'Testjournal',
       created_on: '2026-01-01T00:00:00Z',
-      private_notes: false,
-      details: [],
+      details: [
+        {
+          property: 'attr',
+          name: 'status_id',
+          old_value: '1',
+          new_value: '2',
+        },
+      ],
     })),
   }
 }
@@ -80,7 +64,7 @@ function jsonFile(name: string, content: string): File {
   return file
 }
 
-function exportedFile(name: string, exportedIssues: readonly RedmineIssue[]): File {
+function exportedFile(name: string, exportedIssues: readonly Issue[]): File {
   return jsonFile(
     name,
     serializeDataExport(
@@ -145,7 +129,9 @@ describe('Dashboard', () => {
 
     render(<Dashboard />)
 
-    expect(await screen.findByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Mockdaten · 6 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('JSON-Datei auswählen')).toHaveAttribute(
       'accept',
       'application/json,.json',
@@ -168,7 +154,9 @@ describe('Dashboard', () => {
     )
 
     expect(await screen.findByText('mein-export.json')).toBeVisible()
-    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(
+      screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
     expect(
       screen.getByRole('button', { name: /Ticket #901: Issue 901\./ }),
@@ -192,7 +180,7 @@ describe('Dashboard', () => {
       'future.json',
       JSON.stringify({
         ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
-        version: 2,
+        version: 3,
       }),
       'Version dieser Datenkrake-Datei wird nicht unterstützt',
     ],
@@ -204,21 +192,26 @@ describe('Dashboard', () => {
       }),
       'Datenstruktur der ausgewählten Datei ist ungültig',
     ],
-  ])('shows an import error for %s and keeps the mock data', async (name, content, message) => {
-    const user = userEvent.setup()
-    mockedGetIssues.mockResolvedValue(issues)
-    render(<Dashboard />)
-    await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
+  ])(
+    'shows an import error for %s and keeps the mock data',
+    async (name, content, message) => {
+      const user = userEvent.setup()
+      mockedGetIssues.mockResolvedValue(issues)
+      render(<Dashboard />)
+      await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
-    await user.upload(
-      screen.getByLabelText('JSON-Datei auswählen'),
-      jsonFile(name, content),
-    )
+      await user.upload(
+        screen.getByLabelText('JSON-Datei auswählen'),
+        jsonFile(name, content),
+      )
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(message)
-    expect(screen.getByText('Datenquelle: Mockdaten · 6 Issues')).toBeVisible()
-    expect(screen.getByLabelText('Geladene Issues: 6')).toBeVisible()
-  })
+      expect(await screen.findByRole('alert')).toHaveTextContent(message)
+      expect(
+        screen.getByText('Datenquelle: Mockdaten · 6 Issues'),
+      ).toBeVisible()
+      expect(screen.getByLabelText('Geladene Issues: 6')).toBeVisible()
+    },
+  )
 
   it('keeps an imported data set active when a later import fails', async () => {
     const user = userEvent.setup()
@@ -263,7 +256,9 @@ describe('Dashboard', () => {
     )
 
     expect(await screen.findByText('second.json')).toBeVisible()
-    expect(screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues')).toBeVisible()
+    expect(
+      screen.getByText('Datenquelle: Importierte JSON-Datei · 2 Issues'),
+    ).toBeVisible()
     expect(screen.queryByText('first.json')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
   })
@@ -278,20 +273,28 @@ describe('Dashboard', () => {
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
-    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(
+      screen.getByLabelText('Redmine Basis-URL'),
+      'https://redmine.test',
+    )
     await user.type(screen.getByLabelText('Redmine API-Key'), 'top-secret')
     await user.type(screen.getByLabelText('Query-Parameter'), 'project_id=42')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
 
-    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Redmine · 2 Issues'),
+    ).toBeVisible()
     expect(screen.getByLabelText('Geladene Issues: 2')).toBeVisible()
     expect(
       screen.getByRole('button', { name: /Ticket #951: Issue 951\./ }),
     ).toBeVisible()
     expect(screen.queryByText('top-secret')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Redmine API-Key')).toHaveValue('')
-    const persistedValues = Array.from({ length: localStorage.length }, (_, index) =>
-      localStorage.getItem(localStorage.key(index) ?? ''),
+    const persistedValues = Array.from(
+      { length: localStorage.length },
+      (_, index) => localStorage.getItem(localStorage.key(index) ?? ''),
     ).join(' ')
     expect(persistedValues).not.toContain('top-secret')
   })
@@ -312,12 +315,18 @@ describe('Dashboard', () => {
     const apiKeyInput = screen.getByLabelText('Redmine API-Key')
     await user.type(baseUrlInput, 'https://redmine.test')
     await user.type(apiKeyInput, 'first-key')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
     await screen.findByText('Datenquelle: Redmine · 1 Issue')
     await user.type(apiKeyInput, 'second-key')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
 
-    expect(await screen.findByText('Datenquelle: Redmine · 2 Issues')).toBeVisible()
+    expect(
+      await screen.findByText('Datenquelle: Redmine · 2 Issues'),
+    ).toBeVisible()
     expect(screen.queryByText('Issue 951')).not.toBeInTheDocument()
     expect(screen.getByText('Issue 962')).toBeVisible()
   })
@@ -330,9 +339,14 @@ describe('Dashboard', () => {
     ])
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
-    await user.type(screen.getByLabelText('Redmine Basis-URL'), 'https://redmine.test')
+    await user.type(
+      screen.getByLabelText('Redmine Basis-URL'),
+      'https://redmine.test',
+    )
     await user.type(screen.getByLabelText('Redmine API-Key'), 'export-secret')
-    await user.click(screen.getByRole('button', { name: 'Issues aus Redmine laden' }))
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
     await screen.findByText('Datenquelle: Redmine · 1 Issue')
 
     const createObjectURL = vi.fn((blob: Blob) => {
@@ -345,7 +359,9 @@ describe('Dashboard', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined)
 
-    await user.click(screen.getByRole('button', { name: 'JSON-Datei speichern' }))
+    await user.click(
+      screen.getByRole('button', { name: 'JSON-Datei speichern' }),
+    )
 
     const blob = createObjectURL.mock.calls[0][0] as Blob
     const json = await new Promise<string>((resolve, reject) => {
@@ -354,7 +370,7 @@ describe('Dashboard', () => {
       reader.addEventListener('error', () => reject(reader.error))
       reader.readAsText(blob)
     })
-    const exported = JSON.parse(json) as { issues: RedmineIssue[] }
+    const exported = JSON.parse(json) as { issues: Issue[] }
     expect(exported.issues.map(({ id }) => id)).toEqual([971])
     expect(json).not.toContain('export-secret')
     expect(json).not.toContain('redmine.test')

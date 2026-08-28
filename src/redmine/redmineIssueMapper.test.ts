@@ -42,10 +42,17 @@ describe('mapRedmineIssue', () => {
 
     const mapped = mapRedmineIssue(source)
 
-    expect(mapped).toEqual(source)
+    expect(mapped).toEqual({
+      id: 42,
+      subject: 'Map Redmine data',
+      status: { id: 3, name: 'In Progress', is_closed: false },
+      created_on: '2026-08-01T08:00:00Z',
+      closed_on: null,
+      journals: [],
+    })
     expect(mapped).not.toBe(source)
     expect(mapped.status).not.toBe(source.status)
-    expect(mapped.custom_fields).not.toBe(source.custom_fields)
+    expect(mapped).not.toHaveProperty('custom_fields')
   })
 
   it('keeps an open issue without a closing timestamp', () => {
@@ -58,7 +65,7 @@ describe('mapRedmineIssue', () => {
     })
     expect(mapped.closed_on).toBeNull()
     expect(mapped.created_on).toBe('2026-08-01T08:00:00Z')
-    expect(mapped.updated_on).toBe('2026-08-03T10:00:00Z')
+    expect(mapped).not.toHaveProperty('updated_on')
   })
 
   it('preserves the closing timestamp of a completed issue', () => {
@@ -116,13 +123,9 @@ describe('mapRedmineIssue', () => {
 
     expect(
       mapped.journals.map(({ id, created_on }) => ({ id, created_on })),
-    ).toEqual([
-      { id: 101, created_on: '2026-08-02T09:00:00Z' },
-      { id: 102, created_on: '2026-08-03T09:00:00Z' },
-    ])
+    ).toEqual([{ id: 101, created_on: '2026-08-02T09:00:00Z' }])
     expect(mapped.journals[0].details).toEqual([
       { property: 'attr', name: 'status_id', old_value: '1', new_value: '3' },
-      { property: 'attr', name: 'done_ratio', old_value: '0', new_value: '20' },
     ])
   })
 
@@ -144,14 +147,9 @@ describe('mapRedmineIssue', () => {
       }),
     )
 
-    expect(mapped.assigned_to).toBeUndefined()
-    expect(mapped.category).toBeUndefined()
-    expect(mapped.journals[0].details[0]).toEqual({
-      property: 'attr',
-      name: 'assigned_to_id',
-      old_value: null,
-      new_value: undefined,
-    })
+    expect(mapped).not.toHaveProperty('assigned_to')
+    expect(mapped).not.toHaveProperty('category')
+    expect(mapped.journals).toEqual([])
   })
 })
 

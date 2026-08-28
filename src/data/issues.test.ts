@@ -10,7 +10,6 @@ describe('local issue data source', () => {
       expect.objectContaining({
         id: expect.any(Number),
         subject: expect.any(String),
-        description: expect.any(String),
         status: expect.objectContaining({
           id: expect.any(Number),
           name: expect.any(String),
@@ -18,9 +17,11 @@ describe('local issue data source', () => {
         }),
       }),
     )
+    expect(issues[0]).not.toHaveProperty('description')
+    expect(issues[0]).not.toHaveProperty('author')
   })
 
-  it('makes journal entries and their details accessible', async () => {
+  it('makes only status-change journal data accessible', async () => {
     const issues = await getIssues()
     const issueWithJournal = issues.find((issue) => issue.journals.length > 0)
 
@@ -28,16 +29,12 @@ describe('local issue data source', () => {
     expect(issueWithJournal?.journals[0]).toEqual(
       expect.objectContaining({
         id: expect.any(Number),
-        notes: expect.any(String),
         created_on: expect.any(String),
-        private_notes: expect.any(Boolean),
-        user: expect.objectContaining({
-          id: expect.any(Number),
-          name: expect.any(String),
-        }),
         details: expect.any(Array),
       }),
     )
+    expect(issueWithJournal?.journals[0]).not.toHaveProperty('notes')
+    expect(issueWithJournal?.journals[0]).not.toHaveProperty('user')
     expect(issueWithJournal?.journals[0].details[0]).toEqual(
       expect.objectContaining({
         property: expect.any(String),

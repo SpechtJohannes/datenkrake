@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { IssueRepository } from '../data/issueRepository'
-import type { RedmineIssue } from '../data/types'
+import type { Issue } from '../data/types'
 import { reconstructStatusHistory } from '../domain/statusHistory'
 import { RedmineClient, RedmineApiError } from './redmineClient'
 import { RedmineIssueRepository } from './redmineIssueRepository'
@@ -55,14 +55,36 @@ describe('RedmineIssueRepository', () => {
       status_id: '*',
     })
 
-    const result: readonly RedmineIssue[] = await repository.getIssues()
+    const result: readonly Issue[] = await repository.getIssues()
 
     expect(client.getIssuesWithJournals).toHaveBeenCalledOnce()
     expect(client.getIssuesWithJournals).toHaveBeenCalledWith({
       project_id: 12,
       status_id: '*',
     })
-    expect(result).toEqual([{ ...source, closed_on: null }])
+    expect(result).toEqual([
+      {
+        id: 42,
+        subject: 'Issue 42',
+        status: { id: 3, name: 'In Progress', is_closed: false },
+        created_on: '2026-08-01T08:00:00Z',
+        closed_on: null,
+        journals: [
+          {
+            id: 101,
+            created_on: '2026-08-02T09:00:00Z',
+            details: [
+              {
+                property: 'attr',
+                name: 'status_id',
+                old_value: '1',
+                new_value: '3',
+              },
+            ],
+          },
+        ],
+      },
+    ])
     expect(result[0]).not.toBe(source)
     expect(result[0].journals[0]).not.toBe(source.journals[0])
   })

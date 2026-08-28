@@ -57,7 +57,7 @@ describe('DataImportPanel export', () => {
     anchorClick.mockReset().mockImplementation(() => undefined)
     mockedCreateDataExport.mockReturnValue({
       format: 'datenkrake',
-      version: 1,
+      version: 2,
       exportedAt: '2026-08-27T14:15:16.000Z',
       issues: [],
     })

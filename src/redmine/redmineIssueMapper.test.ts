@@ -153,6 +153,8 @@ describe('mapRedmineIssue', () => {
       }),
     )
 
+    expect(mapped).not.toHaveProperty('assigned_to')
+    expect(mapped).not.toHaveProperty('category')
     expect(mapped.journals).toEqual([])
   })
 })

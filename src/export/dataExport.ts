@@ -1,98 +1,81 @@
 import type {
-  RedmineCustomField,
-  RedmineIssue,
-  RedmineJournal,
-  RedmineJournalDetail,
-  RedmineReference,
+  Issue,
+  IssueStatusChange,
+  IssueStatusJournal,
   RedmineStatus,
 } from '../data/types'
 
 export const DATA_EXPORT_FORMAT = 'datenkrake'
-export const DATA_EXPORT_VERSION = 1
+export const DATA_EXPORT_VERSION = 2
 
-export interface DataExportV1 {
+export interface DataExportV2 {
   format: typeof DATA_EXPORT_FORMAT
   version: typeof DATA_EXPORT_VERSION
   exportedAt: string
-  issues: RedmineIssue[]
-}
-
-function copyReference(reference: RedmineReference): RedmineReference {
-  return { id: reference.id, name: reference.name }
+  issues: Issue[]
 }
 
 function copyStatus(status: RedmineStatus): RedmineStatus {
-  return { ...copyReference(status), is_closed: status.is_closed }
+  return { id: status.id, name: status.name, is_closed: status.is_closed }
 }
 
-function copyCustomField(field: RedmineCustomField): RedmineCustomField {
-  return { id: field.id, name: field.name, value: field.value }
+type CompleteStatusChange = IssueStatusChange & {
+  old_value: string
+  new_value: string
 }
 
-function copyJournalDetail(detail: RedmineJournalDetail): RedmineJournalDetail {
-  const copied: RedmineJournalDetail = {
-    property: detail.property,
-    name: detail.name,
-  }
-  if (detail.old_value !== undefined) copied.old_value = detail.old_value
-  if (detail.new_value !== undefined) copied.new_value = detail.new_value
-  return copied
+function isCompleteStatusChange(
+  detail: IssueStatusChange,
+): detail is CompleteStatusChange {
+  return (
+    detail.property === 'attr' &&
+    detail.name === 'status_id' &&
+    typeof detail.old_value === 'string' &&
+    typeof detail.new_value === 'string'
+  )
 }
 
-function copyJournal(journal: RedmineJournal): RedmineJournal {
+function copyStatusChange(detail: CompleteStatusChange): IssueStatusChange {
   return {
-    id: journal.id,
-    user: copyReference(journal.user),
-    notes: journal.notes,
-    created_on: journal.created_on,
-    private_notes: journal.private_notes,
-    details: journal.details.map(copyJournalDetail),
+    property: 'attr',
+    name: 'status_id',
+    old_value: detail.old_value,
+    new_value: detail.new_value,
   }
 }
 
-function copyIssue(issue: RedmineIssue): RedmineIssue {
-  const copied: RedmineIssue = {
+function copyJournal(journal: IssueStatusJournal): IssueStatusJournal | null {
+  const details = journal.details
+    .filter(isCompleteStatusChange)
+    .map(copyStatusChange)
+
+  return details.length === 0
+    ? null
+    : {
+        id: journal.id,
+        created_on: journal.created_on,
+        details,
+      }
+}
+
+function copyIssue(issue: Issue): Issue {
+  return {
     id: issue.id,
-    project: copyReference(issue.project),
-    tracker: copyReference(issue.tracker),
-    status: copyStatus(issue.status),
-    priority: copyReference(issue.priority),
-    author: copyReference(issue.author),
     subject: issue.subject,
-    description: issue.description,
+    status: copyStatus(issue.status),
     created_on: issue.created_on,
-    updated_on: issue.updated_on,
     closed_on: issue.closed_on,
-    journals: issue.journals.map(copyJournal),
+    journals: issue.journals.flatMap((journal) => {
+      const copied = copyJournal(journal)
+      return copied === null ? [] : [copied]
+    }),
   }
-  if (issue.assigned_to !== undefined)
-    copied.assigned_to = copyReference(issue.assigned_to)
-  if (issue.category !== undefined)
-    copied.category = copyReference(issue.category)
-  if (issue.fixed_version !== undefined)
-    copied.fixed_version = copyReference(issue.fixed_version)
-  if (issue.start_date !== undefined) copied.start_date = issue.start_date
-  if (issue.due_date !== undefined) copied.due_date = issue.due_date
-  if (issue.done_ratio !== undefined) copied.done_ratio = issue.done_ratio
-  if (issue.is_private !== undefined) copied.is_private = issue.is_private
-  if (issue.estimated_hours !== undefined)
-    copied.estimated_hours = issue.estimated_hours
-  if (issue.total_estimated_hours !== undefined) {
-    copied.total_estimated_hours = issue.total_estimated_hours
-  }
-  if (issue.spent_hours !== undefined) copied.spent_hours = issue.spent_hours
-  if (issue.total_spent_hours !== undefined)
-    copied.total_spent_hours = issue.total_spent_hours
-  if (issue.custom_fields !== undefined) {
-    copied.custom_fields = issue.custom_fields.map(copyCustomField)
-  }
-  return copied
 }
 
 export function createDataExport(
-  issues: readonly RedmineIssue[],
+  issues: readonly Issue[],
   exportedAt: Date,
-): DataExportV1 {
+): DataExportV2 {
   return {
     format: DATA_EXPORT_FORMAT,
     version: DATA_EXPORT_VERSION,
@@ -101,7 +84,7 @@ export function createDataExport(
   }
 }
 
-export function serializeDataExport(dataExport: DataExportV1): string {
+export function serializeDataExport(dataExport: DataExportV2): string {
   return JSON.stringify(dataExport, null, 2)
 }
 

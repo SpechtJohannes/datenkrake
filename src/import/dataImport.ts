@@ -1,4 +1,7 @@
 import type {
+  Issue,
+  IssueStatusChange,
+  IssueStatusJournal,
   RedmineCustomField,
   RedmineIssue,
   RedmineJournal,
@@ -7,6 +10,9 @@ import type {
   RedmineStatus,
 } from '../data/types'
 import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION } from '../export/dataExport'
+import { mapRedmineIssues } from '../redmine/redmineIssueMapper'
+
+const LEGACY_DATA_EXPORT_VERSION = 1
 
 export type DataImportErrorKind =
   | 'invalid-json'
@@ -35,9 +41,9 @@ export class DataImportError extends Error {
 
 export interface DataImportResult {
   format: typeof DATA_EXPORT_FORMAT
-  version: typeof DATA_EXPORT_VERSION
+  version: typeof LEGACY_DATA_EXPORT_VERSION | typeof DATA_EXPORT_VERSION
   exportedAt: string
-  issues: RedmineIssue[]
+  issues: Issue[]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -103,7 +109,7 @@ function isCustomField(value: unknown): value is RedmineCustomField {
   )
 }
 
-function validateJournalDetail(
+function validateV1JournalDetail(
   value: unknown,
   path: string,
 ): asserts value is RedmineJournalDetail {
@@ -122,7 +128,7 @@ function validateJournalDetail(
   }
 }
 
-function validateJournal(
+function validateV1Journal(
   value: unknown,
   path: string,
 ): asserts value is RedmineJournal {
@@ -144,11 +150,11 @@ function validateJournal(
   }
 
   value.details.forEach((detail, index) =>
-    validateJournalDetail(detail, `${path}.details[${index}]`),
+    validateV1JournalDetail(detail, `${path}.details[${index}]`),
   )
 }
 
-function validateIssue(
+function validateV1Issue(
   value: unknown,
   path: string,
 ): asserts value is RedmineIssue {
@@ -204,7 +210,96 @@ function validateIssue(
   }
 
   value.journals.forEach((journal, index) =>
-    validateJournal(journal, `${path}.journals[${index}]`),
+    validateV1Journal(journal, `${path}.journals[${index}]`),
+  )
+}
+
+function hasOnlyKeys(
+  record: Record<string, unknown>,
+  keys: readonly string[],
+): boolean {
+  return Object.keys(record).every((key) => keys.includes(key))
+}
+
+function validateV2StatusChange(
+  value: unknown,
+  path: string,
+): asserts value is IssueStatusChange {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, ['property', 'name', 'old_value', 'new_value']) ||
+    value.property !== 'attr' ||
+    value.name !== 'status_id' ||
+    typeof value.old_value !== 'string' ||
+    typeof value.new_value !== 'string'
+  ) {
+    throw new DataImportError(
+      `Invalid status change at ${path}.`,
+      'invalid-journal-detail',
+      path,
+    )
+  }
+}
+
+function validateV2Journal(
+  value: unknown,
+  path: string,
+): asserts value is IssueStatusJournal {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, ['id', 'created_on', 'details']) ||
+    !isInteger(value.id) ||
+    value.id < 1 ||
+    !isIsoTimestamp(value.created_on) ||
+    !Array.isArray(value.details) ||
+    value.details.length === 0
+  ) {
+    throw new DataImportError(
+      `Invalid status journal at ${path}.`,
+      'invalid-journal',
+      path,
+    )
+  }
+
+  value.details.forEach((detail, index) =>
+    validateV2StatusChange(detail, `${path}.details[${index}]`),
+  )
+}
+
+function validateV2Issue(value: unknown, path: string): asserts value is Issue {
+  if (
+    !isRecord(value) ||
+    !hasOnlyKeys(value, [
+      'id',
+      'subject',
+      'status',
+      'created_on',
+      'closed_on',
+      'journals',
+    ]) ||
+    !isInteger(value.id) ||
+    value.id < 1 ||
+    typeof value.subject !== 'string' ||
+    !isStatus(value.status) ||
+    !hasOnlyKeys(value.status as unknown as Record<string, unknown>, [
+      'id',
+      'name',
+      'is_closed',
+    ]) ||
+    !isIsoTimestamp(value.created_on) ||
+    !('closed_on' in value) ||
+    (value.closed_on !== null && !isIsoTimestamp(value.closed_on)) ||
+    !Array.isArray(value.journals)
+  ) {
+    throw new DataImportError(
+      `Invalid issue at ${path}.`,
+      'invalid-issue',
+      path,
+    )
+  }
+
+  value.journals.forEach((journal, index) =>
+    validateV2Journal(journal, `${path}.journals[${index}]`),
   )
 }
 
@@ -238,7 +333,10 @@ export function parseDataImport(json: string): DataImportResult {
       'missing-version',
     )
   }
-  if (value.version !== DATA_EXPORT_VERSION) {
+  if (
+    value.version !== LEGACY_DATA_EXPORT_VERSION &&
+    value.version !== DATA_EXPORT_VERSION
+  ) {
     throw new DataImportError(
       'The data import version is not supported.',
       'unsupported-version',
@@ -272,14 +370,38 @@ export function parseDataImport(json: string): DataImportResult {
     )
   }
 
+  if (value.version === LEGACY_DATA_EXPORT_VERSION) {
+    value.issues.forEach((issue, index) =>
+      validateV1Issue(issue, `issues[${index}]`),
+    )
+
+    return {
+      format: DATA_EXPORT_FORMAT,
+      version: LEGACY_DATA_EXPORT_VERSION,
+      exportedAt: value.exportedAt,
+      issues: mapRedmineIssues(value.issues),
+    }
+  }
+
   value.issues.forEach((issue, index) =>
-    validateIssue(issue, `issues[${index}]`),
+    validateV2Issue(issue, `issues[${index}]`),
   )
 
   return {
     format: DATA_EXPORT_FORMAT,
     version: DATA_EXPORT_VERSION,
     exportedAt: value.exportedAt,
-    issues: value.issues,
+    issues: (value.issues as Issue[]).map((issue) => ({
+      id: issue.id,
+      subject: issue.subject,
+      status: { ...issue.status },
+      created_on: issue.created_on,
+      closed_on: issue.closed_on,
+      journals: issue.journals.map((journal) => ({
+        id: journal.id,
+        created_on: journal.created_on,
+        details: journal.details.map((detail) => ({ ...detail })),
+      })),
+    })),
   }
 }

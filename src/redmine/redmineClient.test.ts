@@ -38,6 +38,14 @@ const createClient = (fetchImplementation: typeof fetch) =>
     fetch: fetchImplementation,
   })
 
+function deferredResponse() {
+  let resolve!: (response: Response) => void
+  const promise = new Promise<Response>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 describe('RedmineClient', () => {
   it('loads and minimizes the Redmine issue status catalog', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
@@ -194,6 +202,83 @@ describe('RedmineClient', () => {
     expect(
       fetchMock.mock.calls.every(([, init]) => init?.redirect === 'error'),
     ).toBe(true)
+  })
+
+  it('runs at most five issue detail requests and preserves issue order', async () => {
+    const listedIssues = Array.from({ length: 8 }, (_, index) =>
+      issue(index + 1),
+    )
+    const pendingDetails = new Map<
+      number,
+      ReturnType<typeof deferredResponse>
+    >()
+    let activeDetailRequests = 0
+    let maximumActiveDetailRequests = 0
+    const fetchMock = vi.fn<typeof fetch>(async (input) => {
+      const url = new URL(String(input))
+      if (url.pathname.endsWith('/issues.json')) {
+        return jsonResponse(page(listedIssues))
+      }
+
+      const issueId = Number(url.pathname.match(/issues\/(\d+)\.json$/)?.[1])
+      const pending = deferredResponse()
+      pendingDetails.set(issueId, pending)
+      activeDetailRequests += 1
+      maximumActiveDetailRequests = Math.max(
+        maximumActiveDetailRequests,
+        activeDetailRequests,
+      )
+      try {
+        return await pending.promise
+      } finally {
+        activeDetailRequests -= 1
+      }
+    })
+    const client = createClient(fetchMock)
+
+    const resultPromise = client.getIssuesWithJournals()
+    await vi.waitFor(() => expect(pendingDetails.size).toBe(5))
+    expect(maximumActiveDetailRequests).toBe(5)
+
+    pendingDetails
+      .get(3)
+      ?.resolve(jsonResponse({ issue: { ...issue(3), journals: [] } }))
+    await vi.waitFor(() => expect(pendingDetails.size).toBe(6))
+
+    for (const issueId of [1, 2, 4, 5, 6]) {
+      pendingDetails
+        .get(issueId)
+        ?.resolve(jsonResponse({ issue: { ...issue(issueId), journals: [] } }))
+    }
+    await vi.waitFor(() => expect(pendingDetails.size).toBe(8))
+    for (const issueId of [7, 8]) {
+      pendingDetails
+        .get(issueId)
+        ?.resolve(jsonResponse({ issue: { ...issue(issueId), journals: [] } }))
+    }
+
+    await expect(resultPromise).resolves.toEqual(
+      listedIssues.map((listedIssue) => ({ ...listedIssue, journals: [] })),
+    )
+    expect(maximumActiveDetailRequests).toBe(5)
+    expect(pendingDetails.size).toBe(listedIssues.length)
+  })
+
+  it('forwards an issue detail request failure', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(page([issue(1), issue(2)])))
+      .mockResolvedValueOnce(
+        jsonResponse({ issue: { ...issue(1), journals: [] } }),
+      )
+      .mockResolvedValueOnce(jsonResponse({}, 403))
+    const client = createClient(fetchMock)
+
+    await expect(client.getIssuesWithJournals()).rejects.toMatchObject({
+      kind: 'forbidden',
+      status: 403,
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it('blocks redirects for issue status catalog requests', async () => {

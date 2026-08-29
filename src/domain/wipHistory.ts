@@ -1,5 +1,5 @@
 import type { StatusDefinition } from '../data/issues'
-import { calculateCycleTime } from './cycleTime'
+import { calculateCycleTime, type CycleTimeResult } from './cycleTime'
 import type { ReferenceTime } from './statusDwellTime'
 import type { StatusHistoryIssue } from './statusHistory'
 
@@ -35,11 +35,7 @@ export function calculateWipHistory(
     }
 
     const startedAtMs = Date.parse(cycleTime.startedAt)
-    const endedAtMs = cycleTime.isRunning
-      ? referenceTimeMs
-      : cycleTime.endedAt === null
-        ? null
-        : Date.parse(cycleTime.endedAt)
+    const endedAtMs = getIntervalEndTimestamp(cycleTime, referenceTimeMs)
 
     if (
       !Number.isFinite(startedAtMs) ||
@@ -96,13 +92,30 @@ function startOfUtcDay(timestampMs: number): number {
   return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
 }
 
+function getIntervalEndTimestamp(
+  cycleTime: CycleTimeResult,
+  referenceTimeMs: number | null,
+): number | null {
+  if (cycleTime.isRunning) {
+    return referenceTimeMs
+  }
+
+  if (cycleTime.endedAt === null) {
+    return null
+  }
+
+  return Date.parse(cycleTime.endedAt)
+}
+
 function toTimestamp(referenceTime: ReferenceTime): number | null {
-  const timestamp =
-    typeof referenceTime === 'string'
-      ? Date.parse(referenceTime)
-      : referenceTime instanceof Date
-        ? referenceTime.getTime()
-        : referenceTime
+  let timestamp: number
+  if (typeof referenceTime === 'string') {
+    timestamp = Date.parse(referenceTime)
+  } else if (referenceTime instanceof Date) {
+    timestamp = referenceTime.getTime()
+  } else {
+    timestamp = referenceTime
+  }
 
   return Number.isFinite(timestamp) ? timestamp : null
 }

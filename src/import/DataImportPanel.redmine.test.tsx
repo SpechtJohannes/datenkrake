@@ -6,6 +6,8 @@ import {
   RedmineApiError,
   type RedmineErrorKind,
 } from '../redmine/redmineClient'
+import { validateRedmineBaseUrl } from '../redmine/redmineBaseUrl'
+import type { RedmineLoadRequest } from '../redmine/loadRedmineIssues'
 import { DataImportPanel } from './DataImportPanel'
 
 function issue(id: number): RedmineIssue {
@@ -35,6 +37,38 @@ function deferred() {
 }
 
 describe('DataImportPanel Redmine source', () => {
+  it('shows a safe URL error, clears loading state, and does not expose the API key', async () => {
+    const user = userEvent.setup()
+    const onLoadRedmine = vi.fn(async ({ baseUrl }: RedmineLoadRequest) => {
+      validateRedmineBaseUrl(baseUrl)
+    })
+    render(
+      <DataImportPanel
+        issues={[issue(1)]}
+        onImport={vi.fn()}
+        onLoadRedmine={onLoadRedmine}
+        source={{ kind: 'mock' }}
+      />,
+    )
+
+    await user.type(
+      screen.getByLabelText('Redmine Basis-URL'),
+      'http://redmine.test',
+    )
+    await user.type(screen.getByLabelText('Redmine API-Key'), 'secret-key')
+    await user.click(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    )
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('gültige HTTPS-URL')
+    expect(alert).not.toHaveTextContent('secret-key')
+    expect(
+      screen.getByRole('button', { name: 'Issues aus Redmine laden' }),
+    ).toBeEnabled()
+    expect(screen.getByLabelText('Redmine API-Key')).toHaveValue('')
+  })
+
   it('shows fields for base URL, password API key, and query parameters', () => {
     render(
       <DataImportPanel

@@ -94,12 +94,14 @@ function calculateDuration(
 }
 
 function toTimestamp(referenceTime: ReferenceTime): number | null {
-  const timestamp =
-    typeof referenceTime === 'string'
-      ? Date.parse(referenceTime)
-      : referenceTime instanceof Date
-        ? referenceTime.getTime()
-        : referenceTime
+  let timestamp: number
+  if (typeof referenceTime === 'string') {
+    timestamp = Date.parse(referenceTime)
+  } else if (referenceTime instanceof Date) {
+    timestamp = referenceTime.getTime()
+  } else {
+    timestamp = referenceTime
+  }
 
   return Number.isFinite(timestamp) ? timestamp : null
 }

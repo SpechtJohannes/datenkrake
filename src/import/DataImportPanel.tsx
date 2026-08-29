@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Issue } from '../data/types'
 import {
   createDataExport,
@@ -146,7 +146,7 @@ export function DataImportPanel({
     }
   }
 
-  async function handleRedmineSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleRedmineSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoadingRedmine(true)
     try {

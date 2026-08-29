@@ -11,7 +11,12 @@ import { RedmineApiError } from '../redmine/redmineClient'
 import { RedmineBaseUrlError } from '../redmine/redmineBaseUrl'
 import type { RedmineLoadRequest } from '../redmine/loadRedmineIssues'
 import type { RedmineIssueQuery, RedmineQueryValue } from '../redmine/types'
-import { DataImportError, parseDataImport } from './dataImport'
+import {
+  DataImportError,
+  MAX_DATA_IMPORT_FILE_SIZE_BYTES,
+  MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES,
+  parseDataImport,
+} from './dataImport'
 
 export type ActiveDataSource =
   { kind: 'mock' } | { kind: 'import'; fileName: string } | { kind: 'redmine' }
@@ -117,6 +122,12 @@ export function DataImportPanel({
     if (file === undefined) return
     setIsReading(true)
     try {
+      if (file.size > MAX_DATA_IMPORT_FILE_SIZE_BYTES) {
+        setErrorMessage(
+          `Die ausgewählte Datei ist größer als ${MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES} MB und kann nicht importiert werden.`,
+        )
+        return
+      }
       const result = parseDataImport(await file.text(), legacyStatusDefinitions)
       onImport(result, file.name)
       setErrorMessage(null)

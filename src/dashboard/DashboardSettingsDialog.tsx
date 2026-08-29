@@ -6,10 +6,10 @@ import {
 } from './dashboardVisibility'
 
 interface DashboardSettingsDialogProps {
-  visibility: DashboardVisibility
-  onChange: (sectionId: DashboardSectionId, visible: boolean) => void
-  onClose: () => void
-  onReset: () => void
+  readonly visibility: DashboardVisibility
+  readonly onChange: (sectionId: DashboardSectionId, visible: boolean) => void
+  readonly onClose: () => void
+  readonly onReset: () => void
 }
 
 export function DashboardSettingsDialog({

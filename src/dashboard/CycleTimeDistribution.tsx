@@ -3,8 +3,8 @@ import type { CycleTimeMetrics } from '../domain/cycleTimeMetrics'
 import { formatDurationMs } from '../domain/statusDwellTime'
 
 interface CycleTimeDistributionProps {
-  histogram: CycleTimeHistogram
-  metrics: CycleTimeMetrics
+  readonly histogram: CycleTimeHistogram
+  readonly metrics: CycleTimeMetrics
 }
 
 export function CycleTimeDistribution({

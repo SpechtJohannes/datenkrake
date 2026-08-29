@@ -1,7 +1,7 @@
 import type { WeeklyThroughput } from '../domain/weeklyThroughput'
 
 interface ThroughputChartProps {
-  weeks: readonly WeeklyThroughput[]
+  readonly weeks: readonly WeeklyThroughput[]
 }
 
 export function ThroughputChart({ weeks }: ThroughputChartProps) {

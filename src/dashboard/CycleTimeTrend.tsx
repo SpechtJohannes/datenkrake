@@ -24,8 +24,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat('de-DE', {
 })
 
 interface CycleTimeTrendProps {
-  metrics: CycleTimeMetrics
-  points: readonly CycleTimeTrendPoint[]
+  readonly metrics: CycleTimeMetrics
+  readonly points: readonly CycleTimeTrendPoint[]
 }
 
 export function CycleTimeTrend({ metrics, points }: CycleTimeTrendProps) {

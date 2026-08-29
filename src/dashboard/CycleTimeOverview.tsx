@@ -9,12 +9,12 @@ import { CycleTimeSummary } from './CycleTimeSummary'
 import { CycleTimeTrend } from './CycleTimeTrend'
 
 interface CycleTimeOverviewProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
-  showDistribution: boolean
-  showSummary: boolean
-  showTrend: boolean
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
+  readonly referenceTime: ReferenceTime
+  readonly showDistribution: boolean
+  readonly showSummary: boolean
+  readonly showTrend: boolean
 }
 
 export function CycleTimeOverview({

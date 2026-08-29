@@ -9,9 +9,9 @@ import type { ReferenceTime } from '../domain/statusDwellTime'
 const DAY_MS = 24 * 60 * 60 * 1000
 
 interface AggregatedStatusDwellTimesProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
+  readonly referenceTime: ReferenceTime
 }
 
 export function AggregatedStatusDwellTimes({
@@ -31,7 +31,7 @@ export function AggregatedStatusDwellTimes({
 export function AggregatedStatusDwellTimeBars({
   statuses,
 }: {
-  statuses: readonly AggregatedStatusDwellTime[]
+  readonly statuses: readonly AggregatedStatusDwellTime[]
 }) {
   if (statuses.length === 0) {
     return (

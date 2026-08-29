@@ -4,9 +4,9 @@ import { calculateAgingWip, type AgingWipItem } from '../domain/agingWip'
 import type { ReferenceTime } from '../domain/statusDwellTime'
 
 interface AgingWipOverviewProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
+  readonly referenceTime: ReferenceTime
 }
 
 export function AgingWipOverview({
@@ -19,7 +19,11 @@ export function AgingWipOverview({
   return <AgingWipList items={items} />
 }
 
-export function AgingWipList({ items }: { items: readonly AgingWipItem[] }) {
+export function AgingWipList({
+  items,
+}: {
+  readonly items: readonly AgingWipItem[]
+}) {
   if (items.length === 0) {
     return (
       <section className="aging-wip" aria-labelledby="aging-wip-title">

@@ -206,7 +206,7 @@ export function DataImportPanel({
       <form className="redmine-source-form" onSubmit={handleRedmineSubmit}>
         <h3>Direkt aus Redmine laden</h3>
         <label>
-          Redmine Basis-URL
+          <span>Redmine Basis-URL</span>
           <input
             onChange={(event) => setBaseUrl(event.target.value)}
             placeholder="https://redmine.example.com"
@@ -216,7 +216,7 @@ export function DataImportPanel({
           />
         </label>
         <label>
-          Redmine API-Key
+          <span>Redmine API-Key</span>
           <input
             autoComplete="off"
             onChange={(event) => setApiKey(event.target.value)}
@@ -226,7 +226,7 @@ export function DataImportPanel({
           />
         </label>
         <label>
-          Query-Parameter
+          <span>Query-Parameter</span>
           <input
             onChange={(event) => setQueryParameters(event.target.value)}
             placeholder="project_id=12&status_id=*"

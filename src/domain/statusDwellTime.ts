@@ -28,46 +28,65 @@ export function calculateStatusDwellTimes(
   const dwellTimes = new Map<number, StatusDwellTime>()
 
   for (const phase of phases) {
-    const dwellTime = getOrCreateDwellTime(dwellTimes, phase)
-    dwellTime.visitCount += 1
-
-    if (phase.statusName !== null && dwellTime.statusName === null) {
-      dwellTime.statusName = phase.statusName
-    }
-
-    if (phase.endedAt !== null) {
-      dwellTime.completedDurationMs += getNonNegativeDuration(phase.durationMs)
-      if (isValidDuration(phase.durationMs)) {
-        dwellTime.visitDurationsMs.push(phase.durationMs)
-      }
-    }
+    addPhaseToDwellTimes(dwellTimes, phase)
   }
 
-  if (currentPhase !== undefined) {
-    const currentDwellTime = dwellTimes.get(currentPhase.statusId)
-
-    if (currentDwellTime !== undefined) {
-      currentDwellTime.isCurrent = true
-
-      if (currentPhase.endedAt === null) {
-        currentDwellTime.ongoingDurationMs = calculateOngoingDuration(
-          currentPhase.startedAt,
-          referenceTime,
-        )
-        if (isValidDuration(currentDwellTime.ongoingDurationMs)) {
-          currentDwellTime.visitDurationsMs.push(
-            currentDwellTime.ongoingDurationMs,
-          )
-        }
-      }
-    }
-  }
+  applyCurrentPhase(dwellTimes, currentPhase, referenceTime)
 
   return Array.from(dwellTimes.values(), (dwellTime) => ({
     ...dwellTime,
     totalDurationMs:
       dwellTime.completedDurationMs + (dwellTime.ongoingDurationMs ?? 0),
   }))
+}
+
+function addPhaseToDwellTimes(
+  dwellTimes: Map<number, StatusDwellTime>,
+  phase: StatusPhase,
+): void {
+  const dwellTime = getOrCreateDwellTime(dwellTimes, phase)
+  dwellTime.visitCount += 1
+
+  if (phase.statusName !== null && dwellTime.statusName === null) {
+    dwellTime.statusName = phase.statusName
+  }
+
+  if (phase.endedAt === null) {
+    return
+  }
+
+  dwellTime.completedDurationMs += getNonNegativeDuration(phase.durationMs)
+  if (isValidDuration(phase.durationMs)) {
+    dwellTime.visitDurationsMs.push(phase.durationMs)
+  }
+}
+
+function applyCurrentPhase(
+  dwellTimes: Map<number, StatusDwellTime>,
+  currentPhase: StatusPhase | undefined,
+  referenceTime: ReferenceTime | undefined,
+): void {
+  if (currentPhase === undefined) {
+    return
+  }
+
+  const currentDwellTime = dwellTimes.get(currentPhase.statusId)
+  if (currentDwellTime === undefined) {
+    return
+  }
+
+  currentDwellTime.isCurrent = true
+  if (currentPhase.endedAt !== null) {
+    return
+  }
+
+  currentDwellTime.ongoingDurationMs = calculateOngoingDuration(
+    currentPhase.startedAt,
+    referenceTime,
+  )
+  if (isValidDuration(currentDwellTime.ongoingDurationMs)) {
+    currentDwellTime.visitDurationsMs.push(currentDwellTime.ongoingDurationMs)
+  }
 }
 
 function getOrCreateDwellTime(

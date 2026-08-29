@@ -16,6 +16,10 @@ import { mapRedmineIssues } from '../redmine/redmineIssueMapper'
 const LEGACY_DATA_EXPORT_VERSIONS = [1, 2] as const
 type LegacyDataExportVersion = (typeof LEGACY_DATA_EXPORT_VERSIONS)[number]
 
+export const MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES = 10
+export const MAX_DATA_IMPORT_FILE_SIZE_BYTES =
+  MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES * 1024 * 1024
+
 export type DataImportErrorKind =
   | 'invalid-json'
   | 'missing-format'

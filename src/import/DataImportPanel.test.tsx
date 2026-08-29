@@ -8,6 +8,10 @@ import {
   serializeDataExport,
 } from '../export/dataExport'
 import { DataImportPanel } from './DataImportPanel'
+import {
+  MAX_DATA_IMPORT_FILE_SIZE_BYTES,
+  MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES,
+} from './dataImport'
 
 vi.mock('../export/dataExport', () => ({
   DATA_EXPORT_FORMAT: 'datenkrake',
@@ -38,6 +42,88 @@ function issue(id: number): RedmineIssue {
     journals: [],
   }
 }
+
+const validImportJson = JSON.stringify({
+  format: 'datenkrake',
+  version: 3,
+  exportedAt: '2026-08-27T14:15:16.000Z',
+  statusDefinitions: [],
+  issues: [],
+})
+
+function importFile(size: number) {
+  const file = new File([validImportJson], 'import.json', {
+    type: 'application/json',
+  })
+  const text = vi.fn().mockResolvedValue(validImportJson)
+  Object.defineProperties(file, {
+    size: { value: size },
+    text: { value: text },
+  })
+  return { file, text }
+}
+
+describe('DataImportPanel import size limit', () => {
+  it.each([
+    ['below', MAX_DATA_IMPORT_FILE_SIZE_BYTES - 1],
+    ['exactly at', MAX_DATA_IMPORT_FILE_SIZE_BYTES],
+  ])('imports a file %s the size limit', async (_description, size) => {
+    const user = userEvent.setup()
+    const onImport = vi.fn()
+    const { file, text } = importFile(size)
+    render(
+      <DataImportPanel
+        issues={[issue(1)]}
+        onImport={onImport}
+        onLoadRedmine={vi.fn()}
+        source={{ kind: 'mock' }}
+      />,
+    )
+
+    await user.upload(screen.getByLabelText('JSON-Datei auswählen'), file)
+
+    expect(text).toHaveBeenCalledOnce()
+    expect(onImport).toHaveBeenCalledWith(
+      {
+        issues: [],
+        statusDefinitions: [],
+        format: 'datenkrake',
+        version: 3,
+        exportedAt: '2026-08-27T14:15:16.000Z',
+      },
+      'import.json',
+    )
+  })
+
+  it('rejects an oversized file before reading it and retains the active data', async () => {
+    const user = userEvent.setup()
+    const onImport = vi.fn()
+    const { file, text } = importFile(MAX_DATA_IMPORT_FILE_SIZE_BYTES + 1)
+    render(
+      <DataImportPanel
+        issues={[issue(91)]}
+        onImport={onImport}
+        onLoadRedmine={vi.fn()}
+        source={{ kind: 'import', fileName: 'active.json' }}
+      />,
+    )
+
+    await user.upload(screen.getByLabelText('JSON-Datei auswählen'), file)
+
+    expect(text).not.toHaveBeenCalled()
+    expect(onImport).not.toHaveBeenCalled()
+    expect(screen.getByText('active.json')).toBeVisible()
+    expect(screen.getByText(/1 Issue/)).toBeVisible()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      `größer als ${MAX_DATA_IMPORT_FILE_SIZE_MEGABYTES} MB`,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Der bisherige Datenbestand bleibt aktiv.',
+    )
+    expect(screen.getByRole('alert')).not.toHaveTextContent('byte')
+    expect(screen.getByLabelText('JSON-Datei auswählen')).toBeEnabled()
+  })
+})
 
 describe('DataImportPanel export', () => {
   const createObjectURL = vi.fn((blob: Blob) => {

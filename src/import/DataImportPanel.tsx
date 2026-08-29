@@ -6,6 +6,7 @@ import {
   serializeDataExport,
 } from '../export/dataExport'
 import { RedmineApiError } from '../redmine/redmineClient'
+import { RedmineBaseUrlError } from '../redmine/redmineBaseUrl'
 import type { RedmineLoadRequest } from '../redmine/loadRedmineIssues'
 import type { RedmineIssueQuery, RedmineQueryValue } from '../redmine/types'
 import { DataImportError, parseDataImport } from './dataImport'
@@ -48,6 +49,7 @@ function getImportErrorMessage(error: unknown): string {
 }
 
 function getRedmineErrorMessage(error: unknown): string {
+  if (error instanceof RedmineBaseUrlError) return error.message
   if (!(error instanceof RedmineApiError)) {
     return 'Die Redmine-Daten konnten wegen eines technischen Fehlers nicht geladen werden.'
   }

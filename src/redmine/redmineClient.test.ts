@@ -39,6 +39,26 @@ const createClient = (fetchImplementation: typeof fetch) =>
   })
 
 describe('RedmineClient', () => {
+  it.each([
+    'http://redmine.example.test',
+    'https://user@redmine.example.test',
+    'https://user:password@redmine.example.test',
+    'invalid',
+    'https://',
+  ])('rejects %s before a network request can be made', async (baseUrl) => {
+    const fetchMock = vi.fn<typeof fetch>()
+
+    expect(
+      () =>
+        new RedmineClient({
+          baseUrl,
+          apiKey: 'secret-api-key',
+          fetch: fetchMock,
+        }),
+    ).toThrow('gültige HTTPS-URL ohne eingebettete Zugangsdaten')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('loads issues and forwards filters, pagination parameters, and the API header', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

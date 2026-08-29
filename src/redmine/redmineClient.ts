@@ -6,6 +6,7 @@ import type {
   RedmineIssueQuery,
   RedmineQueryValue,
 } from './types'
+import { validateRedmineBaseUrl } from './redmineBaseUrl'
 
 export type RedmineErrorKind =
   'network' | 'unauthorized' | 'forbidden' | 'http' | 'invalid-response'
@@ -150,9 +151,9 @@ export class RedmineClient {
   private readonly fetchImplementation: typeof globalThis.fetch
 
   constructor(options: RedmineClientOptions) {
-    this.baseUrl = new URL(
-      options.baseUrl.endsWith('/') ? options.baseUrl : `${options.baseUrl}/`,
-    )
+    const baseUrl = validateRedmineBaseUrl(options.baseUrl)
+    if (!baseUrl.pathname.endsWith('/')) baseUrl.pathname += '/'
+    this.baseUrl = baseUrl
     this.apiKey = options.apiKey
     this.fetchImplementation = options.fetch ?? globalThis.fetch
   }

@@ -2,8 +2,8 @@ import type { CycleTimeResult } from '../domain/cycleTime'
 import { formatDurationMs } from '../domain/statusDwellTime'
 
 interface CycleTimeDetailsProps {
-  cycleTime: CycleTimeResult | null
-  issueId: number
+  readonly cycleTime: CycleTimeResult | null
+  readonly issueId: number
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('de-DE', {
@@ -66,9 +66,9 @@ export function CycleTimeDetails({
 }
 
 interface CycleTimeValueProps {
-  label: string
-  value: string
-  dateTime?: string | null
+  readonly label: string
+  readonly value: string
+  readonly dateTime?: string | null
 }
 
 function CycleTimeValue({ label, value, dateTime }: CycleTimeValueProps) {

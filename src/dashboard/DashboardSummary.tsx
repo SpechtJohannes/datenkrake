@@ -1,7 +1,7 @@
 import type { Issue } from '../data/issues'
 
 interface DashboardSummaryProps {
-  issues: readonly Issue[]
+  readonly issues: readonly Issue[]
 }
 
 export function DashboardSummary({ issues }: DashboardSummaryProps) {

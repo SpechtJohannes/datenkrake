@@ -7,9 +7,9 @@ import {
 import type { ReferenceTime } from '../domain/statusDwellTime'
 
 interface CurrentWipByStatusProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
+  readonly referenceTime: ReferenceTime
 }
 
 export function CurrentWipByStatus({
@@ -29,7 +29,7 @@ export function CurrentWipByStatus({
 export function CurrentWipStatusBars({
   statuses,
 }: {
-  statuses: readonly CurrentWipStatus[]
+  readonly statuses: readonly CurrentWipStatus[]
 }) {
   if (statuses.length === 0) {
     return (

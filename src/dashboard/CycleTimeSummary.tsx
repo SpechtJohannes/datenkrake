@@ -2,7 +2,7 @@ import type { CycleTimeMetrics } from '../domain/cycleTimeMetrics'
 import { formatDurationMs } from '../domain/statusDwellTime'
 
 interface CycleTimeSummaryProps {
-  metrics: CycleTimeMetrics
+  readonly metrics: CycleTimeMetrics
 }
 
 export function CycleTimeSummary({ metrics }: CycleTimeSummaryProps) {

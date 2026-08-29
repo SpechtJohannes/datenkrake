@@ -6,8 +6,8 @@ import {
 } from '../domain/throughputDistribution'
 
 interface ThroughputDistributionProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
 }
 
 export function ThroughputDistribution({
@@ -25,7 +25,7 @@ export function ThroughputDistribution({
 export function ThroughputDistributionChart({
   distribution,
 }: {
-  distribution: ThroughputDistributionResult
+  readonly distribution: ThroughputDistributionResult
 }) {
   if (distribution.weeks.length === 0) {
     return (

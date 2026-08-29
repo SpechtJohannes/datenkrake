@@ -72,11 +72,7 @@ export function Dashboard() {
   }, [])
 
   if (state.status === 'loading') {
-    return (
-      <p className="dashboard-status" role="status">
-        Issues werden geladen …
-      </p>
-    )
+    return <output className="dashboard-status">Issues werden geladen …</output>
   }
 
   if (state.status === 'error') {
@@ -168,10 +164,10 @@ export function Dashboard() {
       )}
 
       {!hasVisibleSection && (
-        <p className="dashboard-status" role="status">
+        <output className="dashboard-status">
           Aktuell sind keine Dashboard-Bereiche ausgewählt. Über „Dashboard
           anpassen“ können Bereiche wieder eingeblendet werden.
-        </p>
+        </output>
       )}
 
       {visibility.summary && <DashboardSummary issues={state.issues} />}

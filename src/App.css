@@ -22,7 +22,10 @@
 }
 
 .dashboard-status {
+  display: block;
   padding: 24px;
+  margin-block: 1em;
+  margin-inline: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);

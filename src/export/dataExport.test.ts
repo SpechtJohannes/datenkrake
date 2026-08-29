@@ -9,6 +9,12 @@ import {
 } from './dataExport'
 
 const exportTime = new Date('2026-08-27T14:00:00.000Z')
+const statusDefinitions = [
+  { id: 3, name: 'In Progress', is_closed: false },
+  { id: 5, name: 'Done', is_closed: true },
+]
+
+const dataSet = (issues: readonly Issue[]) => ({ issues, statusDefinitions })
 
 function issue(id: number, overrides: Partial<Issue> = {}): Issue {
   return {
@@ -23,15 +29,16 @@ function issue(id: number, overrides: Partial<Issue> = {}): Issue {
 }
 
 describe('createDataExport', () => {
-  it('exports format version 2 with the controlled timestamp', () => {
-    const result = createDataExport([issue(42)], exportTime)
+  it('exports format version 3 with statuses and the controlled timestamp', () => {
+    const result = createDataExport(dataSet([issue(42)]), exportTime)
 
     expect(result).toMatchObject({
       format: DATA_EXPORT_FORMAT,
       version: DATA_EXPORT_VERSION,
       exportedAt: '2026-08-27T14:00:00.000Z',
     })
-    expect(result.version).toBe(2)
+    expect(result.version).toBe(3)
+    expect(result.statusDefinitions).toEqual(statusDefinitions)
     expect(result.issues).toHaveLength(1)
   })
 
@@ -67,7 +74,7 @@ describe('createDataExport', () => {
       },
     )
 
-    const exported = createDataExport([source], exportTime)
+    const exported = createDataExport(dataSet([source]), exportTime)
     const serialized = serializeDataExport(exported)
 
     expect(exported.issues[0]).toEqual(
@@ -96,14 +103,15 @@ describe('createDataExport', () => {
 
   it('preserves order, null closing timestamps, and empty data sets', () => {
     expect(
-      createDataExport([issue(3), issue(1), issue(2)], exportTime).issues.map(
-        ({ id }) => id,
-      ),
+      createDataExport(
+        dataSet([issue(3), issue(1), issue(2)]),
+        exportTime,
+      ).issues.map(({ id }) => id),
     ).toEqual([3, 1, 2])
     expect(
-      createDataExport([issue(42)], exportTime).issues[0].closed_on,
+      createDataExport(dataSet([issue(42)]), exportTime).issues[0].closed_on,
     ).toBeNull()
-    expect(createDataExport([], exportTime).issues).toEqual([])
+    expect(createDataExport(dataSet([]), exportTime).issues).toEqual([])
   })
 
   it('creates detached copies of nested domain data', () => {
@@ -123,7 +131,7 @@ describe('createDataExport', () => {
         },
       ],
     })
-    const [exported] = createDataExport([source], exportTime).issues
+    const [exported] = createDataExport(dataSet([source]), exportTime).issues
 
     expect(exported).toEqual(source)
     expect(exported).not.toBe(source)
@@ -135,7 +143,7 @@ describe('createDataExport', () => {
 
 describe('serializeDataExport', () => {
   it('serializes the export as valid JSON', () => {
-    const dataExport = createDataExport([issue(42)], exportTime)
+    const dataExport = createDataExport(dataSet([issue(42)]), exportTime)
     expect(JSON.parse(serializeDataExport(dataExport))).toEqual(dataExport)
   })
 })

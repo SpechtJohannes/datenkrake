@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent, type SubmitEvent } from 'react'
 import type { Issue } from '../data/types'
+import type { DataSet } from '../data/dataSet'
+import type { StatusDefinition } from '../data/types'
 import {
   createDataExport,
   createDataExportFileName,
@@ -16,8 +18,10 @@ export type ActiveDataSource =
 
 interface DataImportPanelProps {
   readonly issues: readonly Issue[]
+  readonly statusDefinitions?: readonly StatusDefinition[]
+  readonly legacyStatusDefinitions?: readonly StatusDefinition[]
   readonly source: ActiveDataSource
-  readonly onImport: (issues: readonly Issue[], fileName: string) => void
+  readonly onImport: (dataSet: DataSet, fileName: string) => void
   readonly onLoadRedmine: (request: RedmineLoadRequest) => Promise<void>
 }
 
@@ -88,6 +92,8 @@ function parseQueryParameters(value: string): RedmineIssueQuery {
 
 export function DataImportPanel({
   issues,
+  statusDefinitions = [],
+  legacyStatusDefinitions = [],
   source,
   onImport,
   onLoadRedmine,
@@ -111,8 +117,8 @@ export function DataImportPanel({
     if (file === undefined) return
     setIsReading(true)
     try {
-      const result = parseDataImport(await file.text())
-      onImport(result.issues, file.name)
+      const result = parseDataImport(await file.text(), legacyStatusDefinitions)
+      onImport(result, file.name)
       setErrorMessage(null)
     } catch (error) {
       setErrorMessage(getImportErrorMessage(error))
@@ -127,7 +133,10 @@ export function DataImportPanel({
     let objectUrl: string | undefined
     let downloadLink: HTMLAnchorElement | undefined
     try {
-      const dataExport = createDataExport(issues, exportedAt)
+      const dataExport = createDataExport(
+        { issues, statusDefinitions },
+        exportedAt,
+      )
       const blob = new Blob([serializeDataExport(dataExport)], {
         type: 'application/json',
       })

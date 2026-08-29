@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Issue } from '../data/types'
 import { reconstructStatusHistory } from '../domain/statusHistory'
+import { calculateCycleTime } from '../domain/cycleTime'
 import { createDataExport, serializeDataExport } from '../export/dataExport'
 import { DataImportError, parseDataImport } from './dataImport'
 
 const exportTime = new Date('2026-08-27T14:00:00.000Z')
+const statusDefinitions = [
+  { id: 1, name: 'New', is_closed: false },
+  { id: 3, name: 'In Progress', is_closed: false },
+  { id: 5, name: 'Done', is_closed: true },
+]
 
 function issue(id: number, overrides: Partial<Issue> = {}): Issue {
   return {
@@ -19,7 +25,7 @@ function issue(id: number, overrides: Partial<Issue> = {}): Issue {
 }
 
 function validExport(issues: readonly Issue[] = [issue(42)]) {
-  return createDataExport(issues, exportTime)
+  return createDataExport({ issues, statusDefinitions }, exportTime)
 }
 
 function parse(value: unknown) {
@@ -43,12 +49,13 @@ function expectImportError(
   }
 }
 
-describe('parseDataImport version 2', () => {
+describe('parseDataImport version 3', () => {
   it('imports a valid minimized issue directly', () => {
     expect(parse(validExport())).toEqual({
       format: 'datenkrake',
-      version: 2,
+      version: 3,
       exportedAt: '2026-08-27T14:00:00.000Z',
+      statusDefinitions,
       issues: [issue(42)],
     })
   })
@@ -86,17 +93,70 @@ describe('parseDataImport version 2', () => {
     })
 
     const imported = parseDataImport(
-      serializeDataExport(createDataExport([source], exportTime)),
-    ).issues
+      serializeDataExport(
+        createDataExport({ issues: [source], statusDefinitions }, exportTime),
+      ),
+    )
 
-    expect(imported).toEqual([source])
+    expect(imported.issues).toEqual([source])
+    expect(imported.statusDefinitions).toEqual(statusDefinitions)
     expect(
-      reconstructStatusHistory(imported[0], [
-        { id: 1, name: 'New', is_closed: false },
-        { id: 3, name: 'In Progress', is_closed: false },
-        { id: 5, name: 'Done', is_closed: true },
-      ]).map(({ statusId }) => statusId),
+      reconstructStatusHistory(
+        imported.issues[0],
+        imported.statusDefinitions,
+      ).map(({ statusId }) => statusId),
     ).toEqual([1, 3, 5])
+  })
+
+  it('preserves status-based metrics with instance-specific status IDs', () => {
+    const dynamicStatuses = [
+      { id: 1, name: 'New', is_closed: false },
+      { id: 20, name: 'Refined', is_closed: false },
+      { id: 50, name: 'Done', is_closed: true },
+    ]
+    const source = issue(42, {
+      status: { id: 50, name: 'Done', is_closed: true },
+      closed_on: '2026-08-04T08:00:00Z',
+      journals: [
+        {
+          id: 1,
+          created_on: '2026-08-02T08:00:00Z',
+          details: [
+            {
+              property: 'attr',
+              name: 'status_id',
+              old_value: '1',
+              new_value: '20',
+            },
+          ],
+        },
+        {
+          id: 2,
+          created_on: '2026-08-04T08:00:00Z',
+          details: [
+            {
+              property: 'attr',
+              name: 'status_id',
+              old_value: '20',
+              new_value: '50',
+            },
+          ],
+        },
+      ],
+    })
+    const before = calculateCycleTime(source, dynamicStatuses)
+    const imported = parseDataImport(
+      serializeDataExport(
+        createDataExport(
+          { issues: [source], statusDefinitions: dynamicStatuses },
+          exportTime,
+        ),
+      ),
+    )
+
+    expect(
+      calculateCycleTime(imported.issues[0], imported.statusDefinitions),
+    ).toEqual(before)
   })
 
   it('accepts null and present closing timestamps and empty data sets', () => {
@@ -110,7 +170,7 @@ describe('parseDataImport version 2', () => {
 
   it('rejects unsupported versions', () => {
     expectImportError(
-      { ...validExport(), version: 3 },
+      { ...validExport(), version: 4 },
       'unsupported-version',
       'version',
     )
@@ -181,6 +241,20 @@ describe('parseDataImport version 2', () => {
   })
 })
 
+describe('parseDataImport version 2 compatibility', () => {
+  it('uses the supplied legacy status catalog', () => {
+    const legacyV2: Record<string, unknown> = {
+      ...validExport(),
+      version: 2,
+    }
+    delete legacyV2.statusDefinitions
+    const result = parseDataImport(JSON.stringify(legacyV2), statusDefinitions)
+
+    expect(result.version).toBe(2)
+    expect(result.statusDefinitions).toEqual(statusDefinitions)
+  })
+})
+
 describe('parseDataImport version 1 migration', () => {
   it('imports version 1 and immediately discards legacy Redmine data', () => {
     const legacy = {
@@ -229,9 +303,10 @@ describe('parseDataImport version 1 migration', () => {
       ],
     }
 
-    const result = parse(legacy)
+    const result = parseDataImport(JSON.stringify(legacy), statusDefinitions)
 
     expect(result.version).toBe(1)
+    expect(result.statusDefinitions).toEqual(statusDefinitions)
     expect(result.issues).toEqual([
       issue(42, {
         subject: 'Legacy issue',

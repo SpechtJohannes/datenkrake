@@ -7,6 +7,10 @@ export interface RedmineApiStatus extends RedmineApiReference {
   is_closed: boolean
 }
 
+export interface RedmineApiIssueStatusesResponse {
+  issue_statuses: RedmineApiStatus[]
+}
+
 export interface RedmineApiCustomField {
   id: number
   name: string

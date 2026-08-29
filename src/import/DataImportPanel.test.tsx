@@ -11,7 +11,7 @@ import { DataImportPanel } from './DataImportPanel'
 
 vi.mock('../export/dataExport', () => ({
   DATA_EXPORT_FORMAT: 'datenkrake',
-  DATA_EXPORT_VERSION: 1,
+  DATA_EXPORT_VERSION: 3,
   createDataExport: vi.fn(),
   createDataExportFileName: vi.fn(),
   serializeDataExport: vi.fn(),
@@ -57,8 +57,9 @@ describe('DataImportPanel export', () => {
     anchorClick.mockReset().mockImplementation(() => undefined)
     mockedCreateDataExport.mockReturnValue({
       format: 'datenkrake',
-      version: 2,
+      version: 3,
       exportedAt: '2026-08-27T14:15:16.000Z',
+      statusDefinitions: [],
       issues: [],
     })
     mockedSerializeDataExport.mockReturnValue('{"format":"datenkrake"}')
@@ -102,7 +103,7 @@ describe('DataImportPanel export', () => {
     )
 
     expect(mockedCreateDataExport).toHaveBeenCalledWith(
-      currentIssues,
+      { issues: currentIssues, statusDefinitions: [] },
       expect.any(Date),
     )
     const exportedAt = mockedCreateDataExport.mock.calls[0][1]
@@ -129,7 +130,10 @@ describe('DataImportPanel export', () => {
       screen.getByRole('button', { name: 'JSON-Datei speichern' }),
     )
 
-    expect(mockedCreateDataExport.mock.calls[0][0]).toBe(importedIssues)
+    expect(mockedCreateDataExport.mock.calls[0][0]).toEqual({
+      issues: importedIssues,
+      statusDefinitions: [],
+    })
     expect(mockedCreateDataExport).toHaveBeenCalledOnce()
   })
 

@@ -3,6 +3,7 @@ import type {
   RedmineApiIssueResponse,
   RedmineApiIssuesPage,
   RedmineApiIssueWithJournals,
+  RedmineApiIssueStatusesResponse,
   RedmineIssueQuery,
   RedmineQueryValue,
 } from './types'
@@ -133,6 +134,23 @@ function parseIssueResponse(value: unknown): RedmineApiIssueResponse {
   return value as unknown as RedmineApiIssueResponse
 }
 
+function parseIssueStatusesResponse(
+  value: unknown,
+): RedmineApiIssueStatusesResponse {
+  if (
+    !isRecord(value) ||
+    !Array.isArray(value.issue_statuses) ||
+    !value.issue_statuses.every(isStatus)
+  ) {
+    throw new RedmineApiError(
+      'Redmine returned an unexpected issue statuses response.',
+      'invalid-response',
+    )
+  }
+
+  return value as unknown as RedmineApiIssueStatusesResponse
+}
+
 function appendQueryValue(
   searchParams: URLSearchParams,
   key: string,
@@ -184,6 +202,19 @@ export class RedmineClient {
       }
       nextOffset = followingOffset
     }
+  }
+
+  async getIssueStatuses(): Promise<
+    RedmineApiIssueStatusesResponse['issue_statuses']
+  > {
+    const response = parseIssueStatusesResponse(
+      await this.requestJson(new URL('issue_statuses.json', this.baseUrl)),
+    )
+    return response.issue_statuses.map(({ id, name, is_closed }) => ({
+      id,
+      name,
+      is_closed,
+    }))
   }
 
   async getIssueWithJournals(

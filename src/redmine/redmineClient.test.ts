@@ -126,6 +126,7 @@ describe('RedmineClient', () => {
     expect(new Headers(init?.headers).get('X-Redmine-API-Key')).toBe(
       'secret-api-key',
     )
+    expect(init?.redirect).toBe('error')
   })
 
   it('loads every page using the offsets returned by Redmine', async () => {
@@ -190,7 +191,53 @@ describe('RedmineClient', () => {
       client.getIssuesWithJournals({ project_id: 9 }),
     ).resolves.toHaveLength(2)
     expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(
+      fetchMock.mock.calls.every(([, init]) => init?.redirect === 'error'),
+    ).toBe(true)
   })
+
+  it('blocks redirects for issue status catalog requests', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValue(new TypeError('redirect blocked'))
+    const client = createClient(fetchMock)
+
+    await expect(client.getIssueStatuses()).rejects.toMatchObject({
+      kind: 'network',
+      message: 'The Redmine instance could not be reached.',
+    })
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fetchMock.mock.calls[0][1]?.redirect).toBe('error')
+  })
+
+  it.each([
+    ['cross-origin', 'https://other.example.test/issues.json'],
+    ['protocol downgrade', 'http://redmine.example.test/issues.json'],
+  ])(
+    'does not follow a %s redirect or expose credentials',
+    async (_description, redirectTarget) => {
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockImplementation(async (_input, init) => {
+          if (init?.redirect === 'error') {
+            throw new TypeError(
+              `Redirect to ${redirectTarget} blocked for secret-api-key`,
+            )
+          }
+          return jsonResponse(page([issue(1)]))
+        })
+      const client = createClient(fetchMock)
+
+      const error = await client.getIssues().catch((reason: unknown) => reason)
+      expect(error).toMatchObject({
+        kind: 'network',
+        message: 'The Redmine instance could not be reached.',
+      })
+      expect(String(error)).not.toContain('secret-api-key')
+      expect(fetchMock).toHaveBeenCalledOnce()
+      expect(fetchMock.mock.calls[0][1]?.redirect).toBe('error')
+    },
+  )
 
   it.each([
     [401, 'unauthorized', 'Redmine authentication failed. Check the API key.'],

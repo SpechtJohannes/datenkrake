@@ -271,6 +271,7 @@ export class RedmineClient {
     try {
       response = await this.fetchImplementation(url, {
         headers: { 'X-Redmine-API-Key': this.apiKey },
+        redirect: 'error',
       })
     } catch {
       throw new RedmineApiError(

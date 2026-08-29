@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { getIssues, type Issue } from '../data/issues'
+import { getIssues } from '../data/issues'
 import { getStatuses, type StatusDefinition } from '../data/statusDefinitions'
+import type { DataSet } from '../data/dataSet'
 import {
   DataImportPanel,
   type ActiveDataSource,
@@ -31,9 +32,9 @@ type DashboardState =
   | { status: 'loading' }
   | {
       status: 'success'
-      issues: readonly Issue[]
+      dataSet: DataSet
       source: ActiveDataSource
-      statusDefinitions: readonly StatusDefinition[]
+      legacyStatusDefinitions: readonly StatusDefinition[]
       referenceTime: number
     }
   | { status: 'error' }
@@ -52,9 +53,9 @@ export function Dashboard() {
         if (isActive) {
           setState({
             status: 'success',
-            issues,
+            dataSet: { issues, statusDefinitions },
             source: { kind: 'mock' },
-            statusDefinitions,
+            legacyStatusDefinitions: statusDefinitions,
             referenceTime: Date.now(),
           })
         }
@@ -103,12 +104,12 @@ export function Dashboard() {
     settingsButtonRef.current?.focus()
   }
 
-  function useImportedIssues(issues: readonly Issue[], fileName: string) {
+  function useImportedIssues(dataSet: DataSet, fileName: string) {
     setState((current) =>
       current.status === 'success'
         ? {
             ...current,
-            issues,
+            dataSet,
             source: { kind: 'import', fileName },
             referenceTime: Date.now(),
           }
@@ -117,12 +118,12 @@ export function Dashboard() {
   }
 
   async function useRedmineIssues(request: RedmineLoadRequest) {
-    const issues = await loadRedmineIssues(request)
+    const dataSet = await loadRedmineIssues(request)
     setState((current) =>
       current.status === 'success'
         ? {
             ...current,
-            issues,
+            dataSet,
             source: { kind: 'redmine' },
             referenceTime: Date.now(),
           }
@@ -137,10 +138,12 @@ export function Dashboard() {
   return (
     <section aria-label="Dashboard-Übersicht">
       <DataImportPanel
-        issues={state.issues}
+        issues={state.dataSet.issues}
+        legacyStatusDefinitions={state.legacyStatusDefinitions}
         onImport={useImportedIssues}
         onLoadRedmine={useRedmineIssues}
         source={state.source}
+        statusDefinitions={state.dataSet.statusDefinitions}
       />
 
       <div className="dashboard-toolbar">
@@ -170,10 +173,10 @@ export function Dashboard() {
         </output>
       )}
 
-      {visibility.summary && <DashboardSummary issues={state.issues} />}
+      {visibility.summary && <DashboardSummary issues={state.dataSet.issues} />}
       <CycleTimeOverview
-        issues={state.issues}
-        statusDefinitions={state.statusDefinitions}
+        issues={state.dataSet.issues}
+        statusDefinitions={state.dataSet.statusDefinitions}
         referenceTime={state.referenceTime}
         showDistribution={visibility.cycleTimeDistribution}
         showSummary={visibility.cycleTimeSummary}
@@ -181,49 +184,49 @@ export function Dashboard() {
       />
       {visibility.throughput && (
         <ThroughputOverview
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
         />
       )}
       {visibility.throughputDistribution && (
         <ThroughputDistribution
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
         />
       )}
       {visibility.wip && (
         <WipOverview
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
           referenceTime={state.referenceTime}
         />
       )}
       {visibility.agingWip && (
         <AgingWipOverview
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
           referenceTime={state.referenceTime}
         />
       )}
       {visibility.currentWipByStatus && (
         <CurrentWipByStatus
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
           referenceTime={state.referenceTime}
         />
       )}
       {visibility.aggregatedStatusDwellTimes && (
         <AggregatedStatusDwellTimes
-          issues={state.issues}
-          statusDefinitions={state.statusDefinitions}
+          issues={state.dataSet.issues}
+          statusDefinitions={state.dataSet.statusDefinitions}
           referenceTime={state.referenceTime}
         />
       )}
       {visibility.tickets && (
         <TicketOverview
-          issues={state.issues}
+          issues={state.dataSet.issues}
           referenceTime={state.referenceTime}
-          statusDefinitions={state.statusDefinitions}
+          statusDefinitions={state.dataSet.statusDefinitions}
         />
       )}
     </section>

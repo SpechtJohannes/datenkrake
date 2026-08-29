@@ -36,11 +36,12 @@ Stundenwerte sowie sonstige nicht benötigte Redmine-Metadaten.
 
 ### Datenkrake-JSON-Format
 
-Neue Exporte verwenden ausschließlich das minimierte Datenkrake-Format V2 und
+Neue Exporte verwenden ausschließlich das minimierte Datenkrake-Format V3 und
 keinen vollständigen Redmine-API-Dump. V1-Dateien können weiterhin importiert
 werden. Ihre Redmine-nahen Daten werden beim Import auf das minimale Modell
 abgebildet; zusätzliche V1-Informationen leben danach nicht im aktiven
-Datenbestand weiter.
+Datenbestand weiter. V1 und V2 enthalten noch keinen eigenen Statuskatalog und
+verwenden deshalb beim Import den gebündelten Legacy-Katalog.
 
 ### API-Key und sichere Verbindung
 
@@ -83,26 +84,26 @@ Die Anwendung trennt Transport, Datenzugriff, Mapping, Domain-Logik und UI:
   Metriken ohne HTTP- oder React-Abhängigkeit.
 - Dashboard-Komponenten bereiten Ergebnisse für Kennzahlen, Tabellen und
   Diagramme auf.
-- `dataImport` validiert V1/V2 und reduziert V1 beim Einlesen; `dataExport`
-  erzeugt ausschließlich V2.
+- `dataImport` validiert V1/V2/V3 und reduziert V1 beim Einlesen; `dataExport`
+  erzeugt ausschließlich V3.
 - `dashboardVisibility` speichert nur die Sichtbarkeit der Bereiche im Browser.
 - Beim Start liefern lokale Repositories fiktive Mock-Issues und den daraus
-  abgeleiteten Statuskatalog.
+  abgeleiteten Statuskatalog. Beide bilden gemeinsam den Mock-Datenbestand.
 
 ```mermaid
 flowchart LR
-  R[Redmine API] -->|Liste und Details mit Journalen| C[RedmineClient]
+  R[Redmine API] -->|Issues, Journale und Statuskatalog| C[RedmineClient]
   C --> RR[RedmineIssueRepository]
   RR --> M[redmineIssueMapper]
-  F[V1- oder V2-JSON] --> I[dataImport]
+  F[V1-, V2- oder V3-JSON] --> I[dataImport]
   I -->|V1| M
-  I -->|V2 validieren und kopieren| D[Minimales Issue-Modell]
+  I -->|V2/V3 validieren und kopieren| D[Datenbestand: Issues und Statuskatalog]
   M --> D
   L[Fiktive Mockdaten] --> LR[Lokale Repositories]
   LR --> M
   D --> X[Domain-Logik]
   X --> UI[Dashboard]
-  D --> E[dataExport V2]
+  D --> E[dataExport V3]
   E --> O[Lokaler JSON-Download]
   V[Dashboard-Sichtbarkeit] <--> LS[Browser localStorage]
   V --> UI
@@ -150,6 +151,9 @@ Der Client lädt zuerst alle Seiten der Issue-Liste. Danach fordert er für jede
 Issue `GET /issues/:id.json?include=journals` an. Journale sind nötig, weil die
 Listenantwort keine vollständige Statushistorie enthält. Nur Journaldetails mit
 einer vollständigen Änderung von `status_id` gelangen in das Domain-Modell.
+Parallel lädt der Client `GET /issue_statuses.json`. Aus der Antwort werden nur
+Status-ID, Name und `is_closed` übernommen. Scheitert dieser Abruf oder ist die
+Antwort ungültig, wird der gesamte Redmine-Ladevorgang abgebrochen.
 
 Der Nutzer muss Filter wählen, die den fachlich gewünschten Datenbestand und
 einen praktikablen Umfang ergeben. Datenkrake ergänzt keinen eigenen Projekt-,
@@ -158,7 +162,7 @@ wenn die Redmine-Instanz direkten Browserzugriff durch CORS verhindert.
 
 ## Datenkrake-Dateiformat
 
-Ein Export besitzt die Formatkennung `datenkrake`, Version `2` und einen
+Ein Export besitzt die Formatkennung `datenkrake`, Version `3` und einen
 ISO-Zeitstempel `exportedAt`. Dieser dokumentiert den Erzeugungszeitpunkt und
 wird beim Import validiert; er ist nicht der Referenzzeitpunkt der
 Dashboard-Berechnungen.
@@ -166,13 +170,18 @@ Dashboard-Berechnungen.
 ```json
 {
   "format": "datenkrake",
-  "version": 2,
+  "version": 3,
   "exportedAt": "2026-08-29T10:00:00.000Z",
+  "statusDefinitions": [
+    { "id": 1, "name": "New", "is_closed": false },
+    { "id": 20, "name": "Refined", "is_closed": false },
+    { "id": 50, "name": "Done", "is_closed": true }
+  ],
   "issues": [
     {
       "id": 42,
       "subject": "Fiktives Beispiel-Ticket",
-      "status": { "id": 5, "name": "Done", "is_closed": true },
+      "status": { "id": 50, "name": "Done", "is_closed": true },
       "created_on": "2026-08-01T08:00:00Z",
       "closed_on": "2026-08-04T12:00:00Z",
       "journals": [
@@ -184,7 +193,13 @@ Dashboard-Berechnungen.
               "property": "attr",
               "name": "status_id",
               "old_value": "1",
-              "new_value": "2"
+              "new_value": "20"
+            },
+            {
+              "property": "attr",
+              "name": "status_id",
+              "old_value": "20",
+              "new_value": "50"
             }
           ]
         }
@@ -195,10 +210,12 @@ Dashboard-Berechnungen.
 ```
 
 Der Browser liest Dateien mit der File-API. Der Import prüft Formatkennung,
-Version, Zeitstempel und Struktur. V2 lehnt zusätzliche Issue-, Status-,
-Journal- und Detailfelder ab. Der Export erzeugt
+Version, Zeitstempel und Struktur. V3 lehnt zusätzliche Issue-, Status-,
+Statusdefinitions-, Journal- und Detailfelder ab. Der Export erzeugt
 `datenkrake_YYYY_MM_DD.json` und kopiert erneut nur das minimale Modell. V1
-bleibt lesbar, wird aber nicht mehr erzeugt.
+und V2 bleiben lesbar, werden aber nicht mehr erzeugt. Nur V3 trägt den zum
+Datenbestand gehörenden Statuskatalog und kann ihn beim Roundtrip unabhängig
+von der ursprünglichen Redmine-Instanz wiederherstellen.
 
 ## Metriken und fachliche Definitionen
 
@@ -212,7 +229,7 @@ Wechsel werden verworfen.
 
 Cycle Time beginnt beim ersten Eintritt in den eindeutig definierten Status mit
 dem exakten Namen `Refined` und endet beim ersten anschließenden Eintritt in den
-eindeutig definierten Status `Done`. Fehlt im lokalen Katalog genau eine dieser
+eindeutig definierten Status `Done`. Fehlt im aktiven Katalog genau eine dieser
 Definitionen oder erreicht ein Issue `Refined` nicht, gibt es kein Ergebnis.
 
 Ohne Eintritt in `Done` läuft die Cycle Time bis zum Referenzzeitpunkt. Ein
@@ -248,7 +265,7 @@ Wochenwerte; der Median nutzt die lineare 50-Prozent-Perzentilberechnung.
   einschließlich Referenzzeitpunkt. Gemessen wird je UTC-Kalendertag um 00:00
   Uhr vom frühesten Starttag bis zum letzten relevanten End-/Referenztag.
 - **Aktueller WIP nach Status:** zählt Issues mit laufender Cycle Time nach
-  aktuellem Status. Die Reihenfolge folgt dem lokalen Statuskatalog, unbekannte
+  aktuellem Status. Die Reihenfolge folgt dem aktiven Statuskatalog, unbekannte
   Status folgen nach ID.
 - **Aging WIP:** enthält laufende Cycle Times mit gültiger Dauer, absteigend
   nach Alter am Referenzzeitpunkt; bei Gleichstand folgen ID und Betreff.
@@ -297,11 +314,11 @@ in [`docs/sonar.md`](docs/sonar.md).
 
 ## Bekannte Einschränkungen
 
-- **Lokaler Statuskatalog:** Statusdefinitionen werden aus den gebündelten
-  Mockdaten abgeleitet und bei Redmine- oder Dateiimporten nicht ersetzt. Cycle
-  Time setzt darin exakt je einen Status `Refined` und `Done` voraus.
-  Abweichende Workflows oder Status-IDs können zu fehlenden oder fachlich
-  unpassenden Ergebnissen führen.
+- **Statusnamen:** Cycle Time setzt im zum Datenbestand gehörenden Statuskatalog
+  exakt je einen Status `Refined` und `Done` voraus. Abweichende Namen oder
+  mehrdeutige Definitionen liefern keine Cycle Time. Legacy-Dateien V1/V2
+  besitzen keinen eigenen Katalog und verwenden weiterhin die gebündelten
+  Definitionen.
 - **Journaldaten:** Vollständige Metriken hängen von erreichbaren und
   konsistenten Statusjournalen ab. Fehlende, ungültige oder widersprüchliche
   Wechsel werden verworfen und können Historien verkürzen.

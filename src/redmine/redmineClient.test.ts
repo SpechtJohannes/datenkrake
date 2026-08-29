@@ -39,6 +39,44 @@ const createClient = (fetchImplementation: typeof fetch) =>
   })
 
 describe('RedmineClient', () => {
+  it('loads and minimizes the Redmine issue status catalog', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        issue_statuses: [
+          {
+            id: 20,
+            name: 'Refined',
+            is_closed: false,
+            position: 4,
+            default_done_ratio: 10,
+          },
+          { id: 50, name: 'Done', is_closed: true, position: 9 },
+        ],
+      }),
+    )
+    const client = createClient(fetchMock)
+
+    await expect(client.getIssueStatuses()).resolves.toEqual([
+      { id: 20, name: 'Refined', is_closed: false },
+      { id: 50, name: 'Done', is_closed: true },
+    ])
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      '/redmine/issue_statuses.json',
+    )
+  })
+
+  it('rejects an invalid issue status catalog response', async () => {
+    const client = createClient(
+      vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(jsonResponse({ issue_statuses: [{ id: 1 }] })),
+    )
+
+    await expect(client.getIssueStatuses()).rejects.toMatchObject({
+      kind: 'invalid-response',
+    })
+  })
+
   it.each([
     'http://redmine.example.test',
     'https://user@redmine.example.test',

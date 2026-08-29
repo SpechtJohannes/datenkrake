@@ -55,6 +55,15 @@ const issues = [
   createIssue(105, { id: 1, name: 'Neu' }, 1),
   createIssue(106, { id: 1, name: 'Neu' }, 0),
 ]
+const statusDefinitions = [
+  { id: 1, name: 'Neu', is_closed: false },
+  { id: 2, name: 'Erledigt', is_closed: true },
+]
+
+const dataSet = (dataSetIssues: readonly Issue[]) => ({
+  issues: dataSetIssues,
+  statusDefinitions,
+})
 
 function jsonFile(name: string, content: string): File {
   const file = new File([content], name, { type: 'application/json' })
@@ -68,7 +77,10 @@ function exportedFile(name: string, exportedIssues: readonly Issue[]): File {
   return jsonFile(
     name,
     serializeDataExport(
-      createDataExport(exportedIssues, new Date('2026-08-27T14:00:00.000Z')),
+      createDataExport(
+        dataSet(exportedIssues),
+        new Date('2026-08-27T14:00:00.000Z'),
+      ),
     ),
   )
 }
@@ -79,10 +91,7 @@ describe('Dashboard', () => {
     mockedGetIssues.mockReset()
     mockedGetStatuses.mockReset()
     mockedLoadRedmineIssues.mockReset()
-    mockedGetStatuses.mockResolvedValue([
-      { id: 1, name: 'Neu', is_closed: false },
-      { id: 2, name: 'Erledigt', is_closed: true },
-    ])
+    mockedGetStatuses.mockResolvedValue(statusDefinitions)
   })
 
   it('shows a loading state while issues are being loaded', () => {
@@ -171,7 +180,7 @@ describe('Dashboard', () => {
     [
       'foreign.json',
       JSON.stringify({
-        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
+        ...createDataExport(dataSet([]), new Date('2026-08-27T14:00:00.000Z')),
         format: 'other',
       }),
       'kein gültiger Datenkrake-Export',
@@ -179,15 +188,15 @@ describe('Dashboard', () => {
     [
       'future.json',
       JSON.stringify({
-        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
-        version: 3,
+        ...createDataExport(dataSet([]), new Date('2026-08-27T14:00:00.000Z')),
+        version: 4,
       }),
       'Version dieser Datenkrake-Datei wird nicht unterstützt',
     ],
     [
       'invalid-issues.json',
       JSON.stringify({
-        ...createDataExport([], new Date('2026-08-27T14:00:00.000Z')),
+        ...createDataExport(dataSet([]), new Date('2026-08-27T14:00:00.000Z')),
         issues: [{ id: 1 }],
       }),
       'Datenstruktur der ausgewählten Datei ist ungültig',
@@ -266,10 +275,12 @@ describe('Dashboard', () => {
   it('uses successfully loaded Redmine issues as the active dashboard data', async () => {
     const user = userEvent.setup()
     mockedGetIssues.mockResolvedValue(issues)
-    mockedLoadRedmineIssues.mockResolvedValue([
-      createIssue(951, { id: 1, name: 'Neu' }, 1),
-      createIssue(952, { id: 2, name: 'Erledigt' }, 0),
-    ])
+    mockedLoadRedmineIssues.mockResolvedValue(
+      dataSet([
+        createIssue(951, { id: 1, name: 'Neu' }, 1),
+        createIssue(952, { id: 2, name: 'Erledigt' }, 0),
+      ]),
+    )
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
@@ -303,11 +314,15 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     mockedGetIssues.mockResolvedValue(issues)
     mockedLoadRedmineIssues
-      .mockResolvedValueOnce([createIssue(951, { id: 1, name: 'Neu' }, 0)])
-      .mockResolvedValueOnce([
-        createIssue(961, { id: 1, name: 'Neu' }, 0),
-        createIssue(962, { id: 2, name: 'Erledigt' }, 0),
-      ])
+      .mockResolvedValueOnce(
+        dataSet([createIssue(951, { id: 1, name: 'Neu' }, 0)]),
+      )
+      .mockResolvedValueOnce(
+        dataSet([
+          createIssue(961, { id: 1, name: 'Neu' }, 0),
+          createIssue(962, { id: 2, name: 'Erledigt' }, 0),
+        ]),
+      )
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
 
@@ -334,9 +349,9 @@ describe('Dashboard', () => {
   it('exports only the issues previously loaded from Redmine', async () => {
     const user = userEvent.setup()
     mockedGetIssues.mockResolvedValue(issues)
-    mockedLoadRedmineIssues.mockResolvedValue([
-      createIssue(971, { id: 1, name: 'Neu' }, 0),
-    ])
+    mockedLoadRedmineIssues.mockResolvedValue(
+      dataSet([createIssue(971, { id: 1, name: 'Neu' }, 0)]),
+    )
     render(<Dashboard />)
     await screen.findByText('Datenquelle: Mockdaten · 6 Issues')
     await user.type(
@@ -370,8 +385,12 @@ describe('Dashboard', () => {
       reader.addEventListener('error', () => reject(reader.error))
       reader.readAsText(blob)
     })
-    const exported = JSON.parse(json) as { issues: Issue[] }
+    const exported = JSON.parse(json) as {
+      issues: Issue[]
+      statusDefinitions: typeof statusDefinitions
+    }
     expect(exported.issues.map(({ id }) => id)).toEqual([971])
+    expect(exported.statusDefinitions).toEqual(statusDefinitions)
     expect(json).not.toContain('export-secret')
     expect(json).not.toContain('redmine.test')
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:redmine-export')

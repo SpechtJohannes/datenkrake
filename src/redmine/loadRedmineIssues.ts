@@ -1,4 +1,4 @@
-import type { Issue } from '../data/types'
+import type { DataSet } from '../data/dataSet'
 import { RedmineClient } from './redmineClient'
 import { RedmineIssueRepository } from './redmineIssueRepository'
 import type { RedmineIssueQuery } from './types'
@@ -13,7 +13,11 @@ export async function loadRedmineIssues({
   baseUrl,
   apiKey,
   query,
-}: RedmineLoadRequest): Promise<readonly Issue[]> {
+}: RedmineLoadRequest): Promise<DataSet> {
   const client = new RedmineClient({ baseUrl, apiKey })
-  return new RedmineIssueRepository(client, query).getIssues()
+  const [issues, statusDefinitions] = await Promise.all([
+    new RedmineIssueRepository(client, query).getIssues(),
+    client.getIssueStatuses(),
+  ])
+  return { issues, statusDefinitions }
 }

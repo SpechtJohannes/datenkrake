@@ -9,10 +9,12 @@ import type {
   RedmineReference,
   RedmineStatus,
 } from '../data/types'
+import type { DataSet } from '../data/dataSet'
 import { DATA_EXPORT_FORMAT, DATA_EXPORT_VERSION } from '../export/dataExport'
 import { mapRedmineIssues } from '../redmine/redmineIssueMapper'
 
-const LEGACY_DATA_EXPORT_VERSION = 1
+const LEGACY_DATA_EXPORT_VERSIONS = [1, 2] as const
+type LegacyDataExportVersion = (typeof LEGACY_DATA_EXPORT_VERSIONS)[number]
 
 export type DataImportErrorKind =
   | 'invalid-json'
@@ -39,11 +41,10 @@ export class DataImportError extends Error {
   }
 }
 
-export interface DataImportResult {
+export interface DataImportResult extends DataSet {
   format: typeof DATA_EXPORT_FORMAT
-  version: typeof LEGACY_DATA_EXPORT_VERSION | typeof DATA_EXPORT_VERSION
+  version: LegacyDataExportVersion | typeof DATA_EXPORT_VERSION
   exportedAt: string
-  issues: Issue[]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -303,7 +304,30 @@ function validateV2Issue(value: unknown, path: string): asserts value is Issue {
   )
 }
 
-export function parseDataImport(json: string): DataImportResult {
+function validateV3StatusDefinition(
+  value: unknown,
+  path: string,
+): asserts value is RedmineStatus {
+  if (
+    !isStatus(value) ||
+    !hasOnlyKeys(value as unknown as Record<string, unknown>, [
+      'id',
+      'name',
+      'is_closed',
+    ])
+  ) {
+    throw new DataImportError(
+      `Invalid status definition at ${path}.`,
+      'invalid-issue',
+      path,
+    )
+  }
+}
+
+export function parseDataImport(
+  json: string,
+  legacyStatusDefinitions: readonly RedmineStatus[] = [],
+): DataImportResult {
   let value: unknown
   try {
     value = JSON.parse(json)
@@ -334,7 +358,9 @@ export function parseDataImport(json: string): DataImportResult {
     )
   }
   if (
-    value.version !== LEGACY_DATA_EXPORT_VERSION &&
+    !LEGACY_DATA_EXPORT_VERSIONS.includes(
+      value.version as LegacyDataExportVersion,
+    ) &&
     value.version !== DATA_EXPORT_VERSION
   ) {
     throw new DataImportError(
@@ -370,15 +396,18 @@ export function parseDataImport(json: string): DataImportResult {
     )
   }
 
-  if (value.version === LEGACY_DATA_EXPORT_VERSION) {
+  if (value.version === 1) {
     value.issues.forEach((issue, index) =>
       validateV1Issue(issue, `issues[${index}]`),
     )
 
     return {
       format: DATA_EXPORT_FORMAT,
-      version: LEGACY_DATA_EXPORT_VERSION,
+      version: 1,
       exportedAt: value.exportedAt,
+      statusDefinitions: legacyStatusDefinitions.map((status) => ({
+        ...status,
+      })),
       issues: mapRedmineIssues(value.issues),
     }
   }
@@ -387,10 +416,16 @@ export function parseDataImport(json: string): DataImportResult {
     validateV2Issue(issue, `issues[${index}]`),
   )
 
+  const statusDefinitions =
+    value.version === 2
+      ? legacyStatusDefinitions
+      : validateAndReadStatusDefinitions(value)
+
   return {
     format: DATA_EXPORT_FORMAT,
-    version: DATA_EXPORT_VERSION,
+    version: value.version as 2 | typeof DATA_EXPORT_VERSION,
     exportedAt: value.exportedAt,
+    statusDefinitions: statusDefinitions.map((status) => ({ ...status })),
     issues: (value.issues as Issue[]).map((issue) => ({
       id: issue.id,
       subject: issue.subject,
@@ -404,4 +439,21 @@ export function parseDataImport(json: string): DataImportResult {
       })),
     })),
   }
+}
+
+function validateAndReadStatusDefinitions(
+  value: Record<string, unknown>,
+): RedmineStatus[] {
+  if (!Array.isArray(value.statusDefinitions)) {
+    throw new DataImportError(
+      'The data import has invalid status definitions.',
+      'invalid-issue',
+      'statusDefinitions',
+    )
+  }
+
+  value.statusDefinitions.forEach((status, index) =>
+    validateV3StatusDefinition(status, `statusDefinitions[${index}]`),
+  )
+  return value.statusDefinitions
 }

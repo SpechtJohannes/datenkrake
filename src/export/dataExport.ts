@@ -4,14 +4,16 @@ import type {
   IssueStatusJournal,
   RedmineStatus,
 } from '../data/types'
+import type { DataSet } from '../data/dataSet'
 
 export const DATA_EXPORT_FORMAT = 'datenkrake'
-export const DATA_EXPORT_VERSION = 2
+export const DATA_EXPORT_VERSION = 3
 
-export interface DataExportV2 {
+export interface DataExportV3 {
   format: typeof DATA_EXPORT_FORMAT
   version: typeof DATA_EXPORT_VERSION
   exportedAt: string
+  statusDefinitions: RedmineStatus[]
   issues: Issue[]
 }
 
@@ -73,18 +75,19 @@ function copyIssue(issue: Issue): Issue {
 }
 
 export function createDataExport(
-  issues: readonly Issue[],
+  dataSet: DataSet,
   exportedAt: Date,
-): DataExportV2 {
+): DataExportV3 {
   return {
     format: DATA_EXPORT_FORMAT,
     version: DATA_EXPORT_VERSION,
     exportedAt: exportedAt.toISOString(),
-    issues: issues.map(copyIssue),
+    statusDefinitions: dataSet.statusDefinitions.map(copyStatus),
+    issues: dataSet.issues.map(copyIssue),
   }
 }
 
-export function serializeDataExport(dataExport: DataExportV2): string {
+export function serializeDataExport(dataExport: DataExportV3): string {
   return JSON.stringify(dataExport, null, 2)
 }
 

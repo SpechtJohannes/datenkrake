@@ -5,9 +5,9 @@ import { calculateWipHistory } from '../domain/wipHistory'
 import { WipTrend } from './WipTrend'
 
 interface WipOverviewProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
-  referenceTime: ReferenceTime
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
+  readonly referenceTime: ReferenceTime
 }
 
 export function WipOverview({

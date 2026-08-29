@@ -4,8 +4,8 @@ import { calculateWeeklyThroughput } from '../domain/weeklyThroughput'
 import { ThroughputChart } from './ThroughputChart'
 
 interface ThroughputOverviewProps {
-  issues: readonly Issue[]
-  statusDefinitions: readonly StatusDefinition[]
+  readonly issues: readonly Issue[]
+  readonly statusDefinitions: readonly StatusDefinition[]
 }
 
 export function ThroughputOverview({

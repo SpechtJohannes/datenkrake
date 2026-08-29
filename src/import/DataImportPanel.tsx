@@ -15,10 +15,10 @@ export type ActiveDataSource =
   { kind: 'mock' } | { kind: 'import'; fileName: string } | { kind: 'redmine' }
 
 interface DataImportPanelProps {
-  issues: readonly Issue[]
-  source: ActiveDataSource
-  onImport: (issues: readonly Issue[], fileName: string) => void
-  onLoadRedmine: (request: RedmineLoadRequest) => Promise<void>
+  readonly issues: readonly Issue[]
+  readonly source: ActiveDataSource
+  readonly onImport: (issues: readonly Issue[], fileName: string) => void
+  readonly onLoadRedmine: (request: RedmineLoadRequest) => Promise<void>
 }
 
 function getSourceLabel(source: ActiveDataSource): string {

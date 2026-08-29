@@ -15,7 +15,7 @@ const dateFormatter = new Intl.DateTimeFormat('de-DE', {
 })
 
 interface WipTrendProps {
-  points: readonly WipHistoryPoint[]
+  readonly points: readonly WipHistoryPoint[]
 }
 
 export function WipTrend({ points }: WipTrendProps) {

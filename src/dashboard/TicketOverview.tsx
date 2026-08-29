@@ -10,9 +10,9 @@ import {
 import { CycleTimeDetails } from './CycleTimeDetails'
 
 interface TicketOverviewProps {
-  issues: readonly Issue[]
-  referenceTime: ReferenceTime
-  statusDefinitions: readonly StatusDefinition[]
+  readonly issues: readonly Issue[]
+  readonly referenceTime: ReferenceTime
+  readonly statusDefinitions: readonly StatusDefinition[]
 }
 
 export function TicketOverview({
@@ -97,8 +97,8 @@ export function TicketOverview({
 }
 
 interface TicketSummaryValueProps {
-  label: string
-  value: string
+  readonly label: string
+  readonly value: string
 }
 
 function TicketSummaryValue({ label, value }: TicketSummaryValueProps) {
@@ -111,11 +111,11 @@ function TicketSummaryValue({ label, value }: TicketSummaryValueProps) {
 }
 
 interface TicketDetailsProps {
-  cycleTime: CycleTimeResult | null
-  detailsId: string
-  issue: Issue
-  referenceTime: ReferenceTime
-  statusDefinitions: readonly StatusDefinition[]
+  readonly cycleTime: CycleTimeResult | null
+  readonly detailsId: string
+  readonly issue: Issue
+  readonly referenceTime: ReferenceTime
+  readonly statusDefinitions: readonly StatusDefinition[]
 }
 
 function TicketDetails({
